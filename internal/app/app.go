@@ -1,41 +1,52 @@
 package app
 
 import (
-	"fmt"
-	"os"
+	"context"
 
+	"github.com/metal-toolbox/fleet-scheduler/internal/client"
+	"github.com/metal-toolbox/fleet-scheduler/internal/util"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 type App struct {
-	logger *logrus.Logger
+	Ctx context.Context
+	Cfg *util.Configuration
+
+	Logger *logrus.Logger
 }
 
-func New() (*App, error) {
-	var logger = logrus.New()
-	logger.Out = os.Stdout
-
-	switch logLevel {
-	case LogLevelDebug:
-		logger.SetLevel(logrus.DebugLevel)
-	case LogLevelTrace:
-		logger.SetLevel(logrus.TraceLevel)
-	default:
-		logger.SetLevel(logrus.InfoLevel)
-	}
-
-	// Load up configs
-	v := viper.New()
-	v.SetConfigFile("config.yaml")
-	v.AddConfigPath(".")
-	err := v.ReadInConfig()
-
+func New(ctx context.Context, cfgFilePath string) (*App, error) {
+	cfgFileBytes, err := util.LoadConfig(cfgFilePath)
 	if err != nil {
-		logger.Error("Failed to find viper config file")
+		return nil, err
 	}
 
-	return &App {
+	// TODO
+	// err = config.ValidateClientParams(cfgFileBytes)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
+	app := App {
+		Cfg: cfgFileBytes,
+		Logger: logrus.New(),
+		Ctx: ctx,
 	}
+	app.Logger.Level = util.StringToLogrusLogLevel("info")
+
+	return &app, nil
+}
+
+func (a *App) NewClient() (*client.Client, error) {
+	loggerEntry := util.NewLogrusEntry(
+		logrus.Fields{"component": "store.serverservice"},
+		a.Logger,
+	)
+
+	new_client, err := client.New(a.Ctx, a.Cfg, loggerEntry)
+	if err != nil {
+		return new_client, err
+	}
+
+	return new_client, nil
 }

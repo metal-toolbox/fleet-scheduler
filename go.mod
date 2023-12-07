@@ -7,7 +7,7 @@ require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/google/uuid v1.4.0
 	github.com/metal-toolbox/conditionorc v1.0.1
-	github.com/metal-toolbox/rivets v0.1.1
+	github.com/metal-toolbox/rivets v0.1.2
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.17.0

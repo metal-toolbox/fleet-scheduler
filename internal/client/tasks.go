@@ -2,22 +2,14 @@ package client
 
 import (
 	"github.com/metal-toolbox/fleet-scheduler/internal/model"
+	"golang.org/x/sync/semaphore"
 	// "github.com/sirupsen/logrus"
+	fleetDBapi "go.hollow.sh/serverservice/pkg/api/v1"
 )
 
 func (c* Client) CollectServers() error {
-	// First make sure the endpoints we need are established
-	err := c.initServerServiceClient()
-	if err != nil {
-		return err
-	}
-	// err = c.initConditionsClient()
-	// if err != nil {
-	// 	return err
-	// }
-
-	// Gather servers asynchronously
-	serverCh, concLimiter, err := c.AsyncGatherServers(model.ConcurrencyDefault) // TODO; Swap out conc default with actual
+	// Start thread to start collecting servers
+	serverCh, concLimiter, err := c.GatherServersNonBlocking(model.ConcurrencyDefault) // TODO; Swap out conc default with actual
 	if err != nil {
 		return err
 	}
@@ -26,7 +18,7 @@ func (c* Client) CollectServers() error {
 	for server := range(serverCh) {
 		c.logger.Logger.Info("Server UUID: ", server.UUID)
 
-		// err := c.CreateCondition(server.UUID)
+		// err := c.CreateConditionInventory(server.UUID)
 		// if err != nil {
 		// 	c.logger.WithFields(logrus.Fields{
 		// 			"server": server.UUID,
@@ -37,4 +29,19 @@ func (c* Client) CollectServers() error {
 	}
 
 	return nil
+}
+
+func (c *Client) GatherServersNonBlocking(page_size int) (chan fleetDBapi.Server, *semaphore.Weighted, error) {
+	if c.ssClient == nil {
+		return nil, nil, ErrSsClientIsNil
+	}
+
+	serverCh := make(chan fleetDBapi.Server)
+	concLimiter := semaphore.NewWeighted(int64(page_size*page_size))
+
+	go func() {
+		c.gatherServers(page_size, serverCh, concLimiter)
+	}()
+
+	return serverCh, concLimiter, nil
 }

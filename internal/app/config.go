@@ -29,18 +29,22 @@ type Configuration struct {
 	FacilityCode string `mapstructure:"facility_code"`
 
 	// FleetDBConfig defines the fleetdb (serverservice) client configuration parameters
-	FdbCfg *FleetDBConfig `mapstructure:"fleetdb"`
+	FdbCfg *ConfigOIDC `mapstructure:"fleetdb_api"`
+	CoCfg *ConfigOIDC `mapstructure:"conditionorc_api"`
 }
 
-type FleetDBConfig struct {
-	FacilityCode         string   `mapstructure:"facility_code"`
-	Endpoint             string   `mapstructure:"endpoint"`
-	OidcIssuerEndpoint   string   `mapstructure:"oidc_issuer_endpoint"`
-	OidcAudienceEndpoint string   `mapstructure:"oidc_audience_endpoint"`
-	OidcClientSecret     string   `mapstructure:"oidc_client_secret"`
-	OidcClientID         string   `mapstructure:"oidc_client_id"`
-	OidcClientScopes     []string `mapstructure:"oidc_client_scopes"`
-	DisableOAuth         bool     `mapstructure:"disable_oauth"`
+type ConfigOIDC struct {
+	// Disable skips OAuth setup
+	DisableOAuth bool `mapstructure:"disable_oauth"`
+
+	// ServerService OAuth2 parameters
+	Endpoint         string   `mapstructure:"endpoint"`
+	ClientID         string   `mapstructure:"oidc_client_id"`
+	IssuerEndpoint   string   `mapstructure:"oidc_issuer_endpoint"`
+	AudienceEndpoint string   `mapstructure:"oidc_audience_endpoint"`
+	ClientScopes     []string `mapstructure:"oidc_scopes"`
+	PkceCallbackURL  string   `mapstructure:"oidc_pkce_callback_url"`
+	ClientSecret     string   `mapstructure:"oidc_client_secret"`
 }
 
 func loadConfig(path string) (*Configuration, error) {
@@ -74,7 +78,6 @@ func loadConfig(path string) (*Configuration, error) {
 
 func validateClientParams(cfg *Configuration) error {
 	errCfgInvalid := errors.New("Configuration is invalid")
-	errFleetDbInvalid := errors.Wrap(errCfgInvalid, "FleetDbCfg")
 
 	if cfg.LogLevel == "" {
 		cfg.LogLevel = LogLevelInfo
@@ -88,33 +91,49 @@ func validateClientParams(cfg *Configuration) error {
 
 	// FleetDB (serverservice) Configuration
 	if cfg.FdbCfg == nil {
-		return errFleetDbInvalid
+		return errors.Wrap(errCfgInvalid, "fleetdb_api entry doesnt exist")
 	}
-	if cfg.FdbCfg.FacilityCode == "" {
-		return errors.Wrap(errFleetDbInvalid, "Facility Code")
+	if cfg.CoCfg == nil {
+		return errors.Wrap(errCfgInvalid, "conditionorc_api entry doesnt exist")
 	}
-	if cfg.FdbCfg.Endpoint == "" {
-		return errors.Wrap(errFleetDbInvalid, "Endpoint")
+	if cfg.FacilityCode == "" {
+		return errors.Wrap(errCfgInvalid, "Facility Code")
+	}
+	err := validateOIDCConfig(cfg.FdbCfg, errors.Wrap(errCfgInvalid, "fleetdb_api is invalid"))
+	if err != nil {
+		return err
+	}
+	err = validateOIDCConfig(cfg.CoCfg, errors.Wrap(errCfgInvalid, "conditionorc_api is invalid"))
+	if err != nil {
+		return err
 	}
 
-	// OAUTH
-	if !cfg.FdbCfg.DisableOAuth {
-		errCfgOIDCConfig := errors.New("OIDC is invalide")
+	return nil
+}
 
-		if cfg.FdbCfg.OidcIssuerEndpoint == "" {
-			return errors.Wrap(errCfgOIDCConfig, "Issuer Endpoint")
+func validateOIDCConfig(cfg* ConfigOIDC, err error) error {
+	if cfg.Endpoint == "" {
+		return errors.Wrap(err, "endpoint")
+	}
+
+	if !cfg.DisableOAuth {
+		if cfg.ClientID == "" {
+			return errors.Wrap(err, "oidc_client_id")
 		}
-		if cfg.FdbCfg.OidcAudienceEndpoint == "" {
-			return errors.Wrap(errCfgOIDCConfig, "Audience Endpoint")
+		if cfg.IssuerEndpoint == "" {
+			return errors.Wrap(err, "oidc_issuer_endpoint")
 		}
-		if cfg.FdbCfg.OidcClientSecret == "" {
-			return errors.Wrap(errCfgOIDCConfig, "Client Secret")
+		if cfg.AudienceEndpoint == "" {
+			return errors.Wrap(err, "oidc_audience_endpoint")
 		}
-		if cfg.FdbCfg.OidcClientID == "" {
-			return errors.Wrap(errCfgOIDCConfig, "Client ID")
+		if len(cfg.ClientScopes) == 0 {
+			return errors.Wrap(err, "oidc_client_scopes")
 		}
-		if len(cfg.FdbCfg.OidcClientScopes) == 0 {
-			return errors.Wrap(errCfgOIDCConfig, "Client Scopes")
+		if cfg.ClientSecret == "" {
+			return errors.Wrap(err, "oidc_client_secret")
+		}
+		if cfg.PkceCallbackURL == "" {
+			return errors.Wrap(err, "oidc_pkce_callback_url")
 		}
 	}
 

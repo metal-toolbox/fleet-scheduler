@@ -61,6 +61,7 @@ func (c* Client) gatherServers(page_size int, serverCh chan fleetDBapi.Server, c
 
 		// throttle this loop
 		// Doing a spinlock to prevent a permanent lock if the ctx gets canceled
+		// TODO; Kill thread if context is canceled?
 		for !concLimiter.TryAcquire(int64(response.PageSize)) && c.ctx.Err() == nil {
 			time.Sleep(time.Second)
 		}

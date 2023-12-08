@@ -2,7 +2,9 @@ package client
 
 import (
 	"github.com/metal-toolbox/fleet-scheduler/internal/model"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/semaphore"
+
 	// "github.com/sirupsen/logrus"
 	fleetDBapi "go.hollow.sh/serverservice/pkg/api/v1"
 )
@@ -18,12 +20,12 @@ func (c* Client) CollectServers() error {
 	for server := range(serverCh) {
 		c.logger.Logger.Info("Server UUID: ", server.UUID)
 
-		// err := c.CreateConditionInventory(server.UUID)
-		// if err != nil {
-		// 	c.logger.WithFields(logrus.Fields{
-		// 			"server": server.UUID,
-		// 	}).Logger.Error("Failed to create condition")
-		// }
+		err := c.CreateConditionInventory(server.UUID)
+		if err != nil {
+			c.logger.WithFields(logrus.Fields{
+					"server": server.UUID,
+			}).Logger.Error("Failed to create condition")
+		}
 
 		concLimiter.Release(1)
 	}

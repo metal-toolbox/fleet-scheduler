@@ -1,6 +1,9 @@
 log_level: debug
 store_kind: fleetscheduler
-fleetdb:
+facility_code: fr9
+fleetdb_api:
   endpoint: http://192.168.1.191:8000
   disable_oauth: true
-  facility_code: fr9
+conditionorc_api:
+  endpoint: http://192.168.1.191:9001
+  disable_oauth: true

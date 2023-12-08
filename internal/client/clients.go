@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	conditionOrcapi "github.com/metal-toolbox/conditionorc/pkg/api/v1/client"
 	"github.com/metal-toolbox/fleet-scheduler/internal/app"
+	"github.com/metal-toolbox/fleet-scheduler/internal/model"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	fleetDBapi "go.hollow.sh/serverservice/pkg/api/v1"
@@ -43,10 +44,10 @@ func New(ctx context.Context, cfg* app.Configuration, logger *logrus.Entry) (*Cl
 		return nil, errors.Wrap(err, "Failed to initialize FleetDB Client (Serverservice)")
 	}
 
-	// err = client.newConditionOrcClient()
-	// err != nil {
-	// 	return nil, errors.Wrap(err, "Failed to initialize ConditionOrc Client")
-	// }
+	err = client.newConditionOrcClient()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to initialize ConditionOrc Client")
+	}
 
 	return client, nil
 }
@@ -54,6 +55,11 @@ func New(ctx context.Context, cfg* app.Configuration, logger *logrus.Entry) (*Cl
 func (c *Client) newFleetDBClient() error {
 	var ssClient *fleetDBapi.Client
 	var err error
+
+	if c.cfg == nil {
+		return ErrNilConfig
+	}
+
 
 	if c.cfg.FdbCfg.DisableOAuth {
 		ssClient, err = newFleetDBClientWithoutOAuth(c.cfg.FdbCfg, c.logger)
@@ -69,44 +75,42 @@ func (c *Client) newFleetDBClient() error {
 	return err
 }
 
-// TODO: Fix authentication for conditions
-// func (c *Client) newConditionOrcClient() error {
-// 	if c.coClient == nil {
-// 		var coClient *conditionOrcapi.Client = nil
-// 		var err error = nil
+func (c *Client) newConditionOrcClient() error {
+	if c.cfg == nil {
+		return ErrNilConfig
+	}
 
-// 		if c.cfg.SsCfg.DisableOAuth {
-// 			coClient, err = conditionOrcapi.NewClient(c.cfg.SsCfg.Endpoint)
-// 		} else {
-// 			token, err := util.AccessToken(c.ctx, model.ConditionsAPI, c.SsCfg.cfg, true)
-// 			if err != nil {
-// 				return errors.Wrap(ErrAuth, string(model.ConditionsAPI) + err.Error())
-// 			}
-// 			coClient, err = conditionOrcapi.NewClient(c.SsCfg.cfg.Endpoint, conditionOrcapi.WithAuthToken(token))
-// 		}
+	var coClient *conditionOrcapi.Client
+	var err error
 
-// 		c.coClient = coClient
-// 		return err
-// 	} else {
-// 		return nil
-// 	}
-// }
+	if c.cfg.FdbCfg.DisableOAuth {
+		coClient, err = conditionOrcapi.NewClient(c.cfg.FdbCfg.Endpoint)
+	} else {
+		var token string
+
+		token, err = accessToken(c.ctx, model.ConditionsAPI, c.cfg.FdbCfg, true)
+		if err != nil {
+			return errors.Wrap(ErrAuth, string(model.ConditionsAPI) + err.Error())
+		}
+
+		coClient, err = conditionOrcapi.NewClient(c.cfg.FdbCfg.Endpoint, conditionOrcapi.WithAuthToken(token))
+	}
+
+	c.coClient = coClient
+	return err
+}
 
 //// Client initialize helpers
 
-func newFleetDBClientWithOAuth(ctx context.Context, cfg *app.FleetDBConfig, logger *logrus.Entry) (*fleetDBapi.Client, error) {
-	if cfg == nil {
-		return nil, ErrNilConfig
-	}
-
-	provider, err := oidc.NewProvider(ctx, cfg.OidcIssuerEndpoint)
+func newFleetDBClientWithOAuth(ctx context.Context, cfg *app.ConfigOIDC, logger *logrus.Entry) (*fleetDBapi.Client, error) {
+	provider, err := oidc.NewProvider(ctx, cfg.IssuerEndpoint)
 	if err != nil {
 		return nil, err
 	}
 
 	var clientID string
-	if cfg.OidcClientID != "" {
-		clientID = cfg.OidcClientID
+	if cfg.ClientID != "" {
+		clientID = cfg.ClientID
 	} else {
 		clientID = "fleet-scheduler"
 	}
@@ -114,10 +118,10 @@ func newFleetDBClientWithOAuth(ctx context.Context, cfg *app.FleetDBConfig, logg
 	// setup oauth
 	oauthConfig := clientcredentials.Config{
 		ClientID:       clientID,
-		ClientSecret:   cfg.OidcClientSecret,
+		ClientSecret:   cfg.ClientSecret,
 		TokenURL:       provider.Endpoint().TokenURL,
-		Scopes:         cfg.OidcClientScopes,
-		EndpointParams: url.Values{"audience": []string{cfg.OidcAudienceEndpoint}},
+		Scopes:         cfg.ClientScopes,
+		EndpointParams: url.Values{"audience": []string{cfg.AudienceEndpoint}},
 	}
 	oAuthclient := oauthConfig.Client(ctx)
 
@@ -137,13 +141,13 @@ func newFleetDBClientWithOAuth(ctx context.Context, cfg *app.FleetDBConfig, logg
 	client.Timeout = timeout
 
 	return fleetDBapi.NewClientWithToken(
-		cfg.OidcClientSecret,
+		cfg.ClientSecret,
 		cfg.Endpoint,
 		client,
 	)
 }
 
-func newFleetDBClientWithoutOAuth(cfg *app.FleetDBConfig, logger *logrus.Entry) (*fleetDBapi.Client, error) {
+func newFleetDBClientWithoutOAuth(cfg *app.ConfigOIDC, logger *logrus.Entry) (*fleetDBapi.Client, error) {
 	if cfg == nil {
 		return nil, ErrNilConfig
 	}
@@ -183,15 +187,3 @@ func newFleetDBClientWithoutOAuth(cfg *app.FleetDBConfig, logger *logrus.Entry) 
 		client,
 	)
 }
-
-// func responseHook(logger retryablehttp.Logger, r *http.Response) {
-// 	if r.StatusCode == http.StatusInternalServerError {
-// 		b, err := io.ReadAll(r.Body)
-// 		if err != nil {
-// 			logger.Warn("fleetDBapi (serverservice) query returned 500 error, got error reading body: ", err.Error())
-// 			return
-// 		}
-
-// 		logger.Warn("fleetDB (serverservice) query returned 500 error, body: ", string(b))
-// 	}
-// }

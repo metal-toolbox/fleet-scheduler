@@ -1,9 +1,5 @@
 package model
 
-import (
-	rctypes "github.com/metal-toolbox/rivets/condition"
-)
-
 type (
 	AppKind   string
 	StoreKind string
@@ -23,8 +19,6 @@ type (
 const (
 	ServerserviceAPI APIKind = "serverservice"
 	ConditionsAPI    APIKind = "conditions"
-
-	Inventory rctypes.Kind = "inventory"
 
 	StoreKindServerservice StoreKind = "serverservice"
 

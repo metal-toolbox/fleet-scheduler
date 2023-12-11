@@ -1,41 +1,38 @@
 package app
 
 import (
-	"fmt"
-	"os"
+	"context"
 
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 type App struct {
-	logger *logrus.Logger
+	Ctx context.Context
+	Cfg *Configuration
+
+	Logger *logrus.Logger
 }
 
-func New() (*App, error) {
-	var logger = logrus.New()
-	logger.Out = os.Stdout
-
-	switch logLevel {
-	case LogLevelDebug:
-		logger.SetLevel(logrus.DebugLevel)
-	case LogLevelTrace:
-		logger.SetLevel(logrus.TraceLevel)
-	default:
-		logger.SetLevel(logrus.InfoLevel)
-	}
-
-	// Load up configs
-	v := viper.New()
-	v.SetConfigFile("config.yaml")
-	v.AddConfigPath(".")
-	err := v.ReadInConfig()
-
+func New(ctx context.Context, cfgFilePath string) (*App, error) {
+	cfgFileBytes, err := loadConfig(cfgFilePath)
 	if err != nil {
-		logger.Error("Failed to find viper config file")
+		return nil, err
 	}
 
-	return &App {
-
+	app := App {
+		Cfg: cfgFileBytes,
+		Logger: logrus.New(),
+		Ctx: ctx,
 	}
+
+	switch app.Cfg.LogLevel {
+	case LogLevelDebug:
+		app.Logger.Level = logrus.DebugLevel
+	case LogLevelTrace:
+		app.Logger.Level = logrus.TraceLevel
+	default:
+		app.Logger.Level = logrus.InfoLevel
+	}
+
+	return &app, nil
 }

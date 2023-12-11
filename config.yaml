@@ -1,7 +1,9 @@
-serverservice:
-  client_secret:
-  client_id:
-  oidc_provider_endpoint:
-  audience_endpoint:
-github:
-  openbmc_token:
+log_level: debug
+store_kind: fleetscheduler
+facility_code: fr9
+fleetdb_api:
+  endpoint: http://192.168.1.191:8000
+  disable_oauth: true
+conditionorc_api:
+  endpoint: http://192.168.1.191:9001
+  disable_oauth: true

@@ -9,7 +9,7 @@ import (
 	fleetDBapi "go.hollow.sh/serverservice/pkg/api/v1"
 )
 
-func (c* Client) CollectServers() error {
+func (c* Client) CreateConditionInventoryForAllServers() error {
 	// Start thread to start collecting servers
 	serverCh, concLimiter, err := c.GatherServersNonBlocking(model.ConcurrencyDefault) // TODO; Swap out conc default with actual
 	if err != nil {

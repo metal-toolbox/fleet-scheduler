@@ -11,8 +11,8 @@ import (
 func (c *Client) CreateConditionInventory(serverUUID uuid.UUID) error {
 	params, err := json.Marshal(conditionrivets.InventoryTaskParameters{
 		AssetID:               serverUUID,
-		CollectBiosCfg:        false,
-		CollectFirwmareStatus: false,
+		CollectBiosCfg:        true,
+		CollectFirwmareStatus: true,
 		Method:                conditionrivets.OutofbandInventory,
 	})
 	if err != nil {

@@ -15,7 +15,7 @@ var cmdInventory = &cobra.Command{
 	Use:   "inventory",
 	Short: "gather all servers and create invetory for them",
 	Run: func(cmd *cobra.Command, args []string) {
-		collect(cmd.Context())
+		inventory(cmd.Context())
 	},
 }
 
@@ -23,7 +23,7 @@ func init() {
 	rootCmd.AddCommand(cmdInventory)
 }
 
-func collect(ctx context.Context) {
+func inventory(ctx context.Context) {
 	otelCtx, otelShutdown := otelinit.InitOpenTelemetry(ctx, "fleet-scheduler")
 	defer otelShutdown(ctx)
 
@@ -44,11 +44,11 @@ func collect(ctx context.Context) {
 		return
 	}
 
-	err = client.CollectServers()
+	err = client.CreateConditionInventoryForAllServers()
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	app.Logger.Info("collection completed")
+	app.Logger.Info("Task: 'CreateConditionInventoryForAllServers' complete")
 }

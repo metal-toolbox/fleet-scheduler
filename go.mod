@@ -5,7 +5,7 @@ go 1.21.1
 require (
 	github.com/adrg/xdg v0.4.0
 	github.com/coreos/go-oidc v2.2.1+incompatible
-	github.com/google/uuid v1.4.0
+	github.com/google/uuid v1.5.0
 	github.com/metal-toolbox/conditionorc v1.0.1
 	github.com/metal-toolbox/rivets v0.1.2
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20220510032225-4f9f17eaec4c

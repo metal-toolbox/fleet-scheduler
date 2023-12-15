@@ -25,7 +25,7 @@ import (
 const timeout = 30 * time.Second
 
 type Client struct {
-	ssClient *fleetDBapi.Client
+	fdbClient *fleetDBapi.Client
 	coClient *conditionOrcapi.Client
 	cfg* app.Configuration
 	ctx context.Context
@@ -53,7 +53,7 @@ func New(ctx context.Context, cfg* app.Configuration, logger *logrus.Entry) (*Cl
 }
 
 func (c *Client) newFleetDBClient() error {
-	var ssClient *fleetDBapi.Client
+	var fdbClient *fleetDBapi.Client
 	var err error
 
 	if c.cfg == nil {
@@ -62,16 +62,16 @@ func (c *Client) newFleetDBClient() error {
 
 
 	if c.cfg.FdbCfg.DisableOAuth {
-		ssClient, err = newFleetDBClientWithoutOAuth(c.cfg.FdbCfg, c.logger)
+		fdbClient, err = newFleetDBClientWithoutOAuth(c.cfg.FdbCfg, c.logger)
 	} else {
-		ssClient, err = newFleetDBClientWithOAuth(c.ctx, c.cfg.FdbCfg, c.logger)
+		fdbClient, err = newFleetDBClientWithOAuth(c.ctx, c.cfg.FdbCfg, c.logger)
 	}
 
 	if err != nil {
 		return err
 	}
 
-	c.ssClient = ssClient
+	c.fdbClient = fdbClient
 	return err
 }
 

@@ -28,6 +28,6 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $XDG_CONFIG_HOME/mctl/config.yml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "set config file path. Default location is in the env variable FLEET_SCHEDULER_CONFIG")
 	rootCmd.PersistentFlags().BoolVar(&reAuth, "reauth", false, "re-authenticate with oauth services")
 }

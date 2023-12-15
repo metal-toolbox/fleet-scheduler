@@ -11,19 +11,22 @@ import (
 	"golang.org/x/net/context"
 )
 
-var cmdInventory = &cobra.Command{
-	Use:   "inventory",
+var cmdDummyServer = &cobra.Command{
+	Use:   "dummyServer",
 	Short: "gather all servers and create invetory for them",
 	Run: func(cmd *cobra.Command, args []string) {
-		inventory(cmd.Context())
+		dummyServer(cmd.Context())
 	},
 }
 
+var serverCount uint
+
 func init() {
-	rootCmd.AddCommand(cmdInventory)
+	cmdDummyServer.PersistentFlags().UintVar(&serverCount, "serverCount", 1, "number of dummy servers you want to create")
+	rootCmd.AddCommand(cmdDummyServer)
 }
 
-func inventory(ctx context.Context) {
+func dummyServer(ctx context.Context) {
 	otelCtx, otelShutdown := otelinit.InitOpenTelemetry(ctx, "fleet-scheduler")
 	defer otelShutdown(ctx)
 
@@ -45,7 +48,7 @@ func inventory(ctx context.Context) {
 		return
 	}
 
-	err = client.CreateConditionInventoryForAllServers()
+	err = client.CreateNewDummyServers(serverCount)
 	if err != nil {
 		log.Fatal(err)
 		return

@@ -86,5 +86,5 @@ func (c* Client) getServerPage(page_size int, page int) ([]fleetDBapi.Server, *f
 		},
 	}
 
-	return c.ssClient.List(c.ctx, params)
+	return c.fdbClient.List(c.ctx, params)
 }

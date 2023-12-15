@@ -25,7 +25,7 @@ type Configuration struct {
 	// CSV file path when StoreKind is set to csv.
 	CsvFile string `mapstructure:"csv_file"`
 
-	// FacilityCode limits this alloy to events in a facility.
+	// FacilityCode limits this fleet scheduler to events in a facility.
 	FacilityCode string `mapstructure:"facility_code"`
 
 	// FleetDBConfig defines the fleetdb (serverservice) client configuration parameters

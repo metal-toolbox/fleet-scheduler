@@ -1,4 +1,19 @@
+export DOCKER_BUILDKIT=1
+LDFLAG_LOCATION := github.com/metal-toolbox/fleet-scheduler/internal/version
+GIT_COMMIT  := $(shell git rev-parse --short HEAD)
+GIT_BRANCH  := $(shell git symbolic-ref -q --short HEAD)
+GIT_SUMMARY := $(shell git describe --tags --dirty --always)
+VERSION     := $(shell git describe --tags 2> /dev/null)
+BUILD_DATE  := $(shell date +%s)
+GIT_COMMIT_FULL  := $(shell git rev-parse HEAD)
+GO_VERSION := $(shell expr `go version |cut -d ' ' -f3 |cut -d. -f2` \>= 16)
+DOCKER_IMAGE_INBAND  := "ghcr.io/metal-toolbox/fleet-scheduler"
+DOCKER_IMAGE  := "ghcr.io/metal-toolbox/fleet-scheduler"
+REPO := "https://github.com/metal-toolbox/fleet-scheduler.git"
+
 .DEFAULT_GOAL := help
+
+PROJECT_NAME := fleet-scheduler
 
 ## Go test
 test:
@@ -12,15 +27,49 @@ lint:
 go-mod:
 	go mod tidy -compat=1.19 && go mod vendor
 
-## Build osx bin
-build-osx: go-mod
-	GOOS=darwin GOARCH=amd64 go build -o fleet-scheduler -mod vendor
-	sha256sum fleet-scheduler > fleet-scheduler_checksum.txt
+## build osx bin
+build-osx:
+ifeq ($(GO_VERSION), 0)
+	$(error build requies go version 1.17.n or higher)
+endif
+	GOOS=darwin GOARCH=amd64 go build -o $(PROJECT_NAME) \
+		-ldflags \
+		"-X $(LDFLAG_LOCATION).GitCommit=$(GIT_COMMIT) \
+		-X $(LDFLAG_LOCATION).GitBranch=$(GIT_BRANCH) \
+		-X $(LDFLAG_LOCATION).GitSummary=$(GIT_SUMMARY) \
+		-X $(LDFLAG_LOCATION).Version=$(VERSION) \
+		-X $(LDFLAG_LOCATION).BuildDate=$(BUILD_DATE)"
 
 ## Build linux bin
-build-linux: go-mod
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o fleet-scheduler -mod vendor
-	sha256sum fleet-scheduler > fleet-scheduler_checksum.txt
+build-linux:
+ifeq ($(GO_VERSION), 0)
+	$(error build requies go version 1.16.n or higher)
+endif
+	GOOS=linux GOARCH=amd64 go build -o $(PROJECT_NAME) \
+		-ldflags \
+		"-X $(LDFLAG_LOCATION).GitCommit=$(GIT_COMMIT) \
+		-X $(LDFLAG_LOCATION).GitBranch=$(GIT_BRANCH) \
+		-X $(LDFLAG_LOCATION).GitSummary=$(GIT_SUMMARY) \
+		-X $(LDFLAG_LOCATION).Version=$(VERSION) \
+		-X $(LDFLAG_LOCATION).BuildDate=$(BUILD_DATE)"
+
+## build docker image and tag as ghcr.io/metal-toolbox/fleet-scheduler:latest
+build-image: build-linux
+	@echo ">>>> NOTE: You may want to execute 'make build-image-nocache' depending on the Docker stages changed"
+	docker build --rm=true -f Dockerfile -t ${DOCKER_IMAGE}:latest  . \
+							 --label org.label-schema.schema-version=1.0 \
+							 --label org.label-schema.vcs-ref=$(GIT_COMMIT_FULL) \
+							 --label org.label-schema.vcs-url=$(REPO)
+
+## push devel docker image
+push-image-devel: build-image
+	docker tag ${DOCKER_IMAGE}:latest localhost:5001/$(PROJECT_NAME):latest
+	docker push localhost:5001/$(PROJECT_NAME):latest
+	kind load docker-image localhost:5001/$(PROJECT_NAME):latest
+
+## push docker image
+push-image:
+	docker push ${DOCKER_IMAGE_INBAND}:latest
 
 # https://gist.github.com/prwhite/8168133
 # COLORS

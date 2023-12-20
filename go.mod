@@ -7,7 +7,7 @@ require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/google/uuid v1.4.0
 	github.com/metal-toolbox/conditionorc v1.0.1
-	github.com/metal-toolbox/rivets v0.1.2
+	github.com/metal-toolbox/rivets v0.2.2
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20220510032225-4f9f17eaec4c
 	github.com/pkg/errors v0.9.1
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
@@ -25,6 +25,7 @@ require (
 	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/banzaicloud/logrus-runtime-formatter v0.0.0-20190729070250-5ae5475bae5e // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/bmc-toolbox/common v0.0.0-20230717121556-5eb9915a8a5a // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/danieljoos/wincred v1.2.0 // indirect
@@ -90,7 +91,7 @@ require (
 	github.com/jackc/pgx/v4 v4.18.1 // indirect
 	github.com/jmoiron/sqlx v1.3.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.17.3 // indirect
+	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -132,7 +133,7 @@ require (
 	gocloud.dev v0.34.0 // indirect
 	golang.org/x/arch v0.6.0 // indirect
 	golang.org/x/crypto v0.16.0 // indirect
-	golang.org/x/exp v0.0.0-20231127185646-65229373498e // indirect
+	golang.org/x/exp v0.0.0-20231206192017-f3f8817b8deb // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect

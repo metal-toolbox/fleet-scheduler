@@ -28,7 +28,7 @@ type Version struct {
 	AppVersion           string `json:"app_version"`
 	GoVersion            string `json:"go_version"`
 	ServerserviceVersion string `json:"serverservice_version"`
-	ConditionorcVersion  string `json:"serverservice_version"`
+	ConditionorcVersion  string `json:"conditionorc_version"`
 }
 
 func Current() Version {

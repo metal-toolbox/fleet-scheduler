@@ -27,15 +27,15 @@ const timeout = 30 * time.Second
 type Client struct {
 	ssClient *fleetDBapi.Client
 	coClient *conditionOrcapi.Client
-	cfg* app.Configuration
-	ctx context.Context
-	logger *logrus.Entry
+	cfg      *app.Configuration
+	ctx      context.Context
+	logger   *logrus.Entry
 }
 
-func New(ctx context.Context, cfg* app.Configuration, logger *logrus.Entry) (*Client, error) {
-	client := &Client {
-		cfg: cfg,
-		ctx: ctx,
+func New(ctx context.Context, cfg *app.Configuration, logger *logrus.Entry) (*Client, error) {
+	client := &Client{
+		cfg:    cfg,
+		ctx:    ctx,
 		logger: logger,
 	}
 
@@ -59,7 +59,6 @@ func (c *Client) newFleetDBClient() error {
 	if c.cfg == nil {
 		return ErrNilConfig
 	}
-
 
 	if c.cfg.FdbCfg.DisableOAuth {
 		ssClient, err = newFleetDBClientWithoutOAuth(c.cfg.FdbCfg, c.logger)
@@ -90,7 +89,7 @@ func (c *Client) newConditionOrcClient() error {
 
 		token, err = accessToken(c.ctx, model.ConditionsAPI, c.cfg.FdbCfg, true)
 		if err != nil {
-			return errors.Wrap(ErrAuth, string(model.ConditionsAPI) + err.Error())
+			return errors.Wrap(ErrAuth, string(model.ConditionsAPI)+err.Error())
 		}
 
 		coClient, err = conditionOrcapi.NewClient(c.cfg.FdbCfg.Endpoint, conditionOrcapi.WithAuthToken(token))

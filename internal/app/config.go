@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	config_env_variable_name = "FLEET_SCHEDULER_CONFIG"
+	configEnvVariableName = "FLEET_SCHEDULER_CONFIG"
 
-	LogLevelInfo = "info"
+	LogLevelInfo  = "info"
 	LogLevelDebug = "debug"
 	LogLevelTrace = "trace"
 )
@@ -30,7 +30,7 @@ type Configuration struct {
 
 	// FleetDBConfig defines the fleetdb (serverservice) client configuration parameters
 	FdbCfg *ConfigOIDC `mapstructure:"fleetdb_api"`
-	CoCfg *ConfigOIDC `mapstructure:"conditionorc_api"`
+	CoCfg  *ConfigOIDC `mapstructure:"conditionorc_api"`
 }
 
 type ConfigOIDC struct {
@@ -81,12 +81,10 @@ func validateClientParams(cfg *Configuration) error {
 
 	if cfg.LogLevel == "" {
 		cfg.LogLevel = LogLevelInfo
-	} else {
-		if cfg.LogLevel != LogLevelInfo &&
-			cfg.LogLevel != LogLevelDebug &&
-			cfg.LogLevel != LogLevelTrace {
-				return errors.Wrap(errCfgInvalid, "LogLevel")
-			}
+	} else if cfg.LogLevel != LogLevelInfo &&
+		cfg.LogLevel != LogLevelDebug &&
+		cfg.LogLevel != LogLevelTrace {
+		return errors.Wrap(errCfgInvalid, "LogLevel")
 	}
 
 	// FleetDB (serverservice) Configuration
@@ -111,7 +109,7 @@ func validateClientParams(cfg *Configuration) error {
 	return nil
 }
 
-func validateOIDCConfig(cfg* ConfigOIDC, err error) error {
+func validateOIDCConfig(cfg *ConfigOIDC, err error) error {
 	if cfg.Endpoint == "" {
 		return errors.Wrap(err, "endpoint")
 	}
@@ -144,7 +142,7 @@ func openConfig(path string) (*os.File, error) {
 	if path != "" {
 		return os.Open(path)
 	}
-	path = viper.GetString(config_env_variable_name)
+	path = viper.GetString(configEnvVariableName)
 	if path != "" {
 		return os.Open(path)
 	}

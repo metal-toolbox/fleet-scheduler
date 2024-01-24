@@ -19,10 +19,10 @@ func New(ctx context.Context, cfgFilePath string) (*App, error) {
 		return nil, err
 	}
 
-	app := App {
-		Cfg: cfgFileBytes,
+	app := App{
+		Cfg:    cfgFileBytes,
 		Logger: logrus.New(),
-		Ctx: ctx,
+		Ctx:    ctx,
 	}
 
 	switch app.Cfg.LogLevel {

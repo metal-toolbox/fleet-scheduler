@@ -30,25 +30,25 @@ func inventory(ctx context.Context) {
 	otelCtxWithCancel, cancelFunc := context.WithCancel(otelCtx)
 	defer cancelFunc()
 
-	app, err := app.New(otelCtxWithCancel, cfgFile)
+	newApp, err := app.New(otelCtxWithCancel, cfgFile)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return
 	}
 
-	loggerEntry := app.Logger.WithFields(logrus.Fields{"component": "store.serverservice"})
-	loggerEntry.Level = app.Logger.Level
-	client, err := client.New(app.Ctx, app.Cfg, loggerEntry)
+	loggerEntry := newApp.Logger.WithFields(logrus.Fields{"component": "store.serverservice"})
+	loggerEntry.Level = newApp.Logger.Level
+	newClient, err := client.New(newApp.Ctx, newApp.Cfg, loggerEntry)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return
 	}
 
-	err = client.CreateConditionInventoryForAllServers()
+	err = newClient.CreateConditionInventoryForAllServers()
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return
 	}
 
-	app.Logger.Info("Task: 'CreateConditionInventoryForAllServers' complete")
+	newApp.Logger.Info("Task: 'CreateConditionInventoryForAllServers' complete")
 }

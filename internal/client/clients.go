@@ -26,16 +26,16 @@ const timeout = 30 * time.Second
 
 type Client struct {
 	fdbClient *fleetDBapi.Client
-	coClient *conditionOrcapi.Client
-	cfg* app.Configuration
-	ctx context.Context
-	logger *logrus.Entry
+	coClient  *conditionOrcapi.Client
+	cfg       *app.Configuration
+	ctx       context.Context
+	logger    *logrus.Entry
 }
 
-func New(ctx context.Context, cfg* app.Configuration, logger *logrus.Entry) (*Client, error) {
-	client := &Client {
-		cfg: cfg,
-		ctx: ctx,
+func New(ctx context.Context, cfg *app.Configuration, logger *logrus.Entry) (*Client, error) {
+	client := &Client{
+		cfg:    cfg,
+		ctx:    ctx,
 		logger: logger,
 	}
 
@@ -60,7 +60,6 @@ func (c *Client) newFleetDBClient() error {
 		return ErrNilConfig
 	}
 
-
 	if c.cfg.FdbCfg.DisableOAuth {
 		fdbClient, err = newFleetDBClientWithoutOAuth(c.cfg.FdbCfg, c.logger)
 	} else {
@@ -83,17 +82,21 @@ func (c *Client) newConditionOrcClient() error {
 	var coClient *conditionOrcapi.Client
 	var err error
 
-	if c.cfg.FdbCfg.DisableOAuth {
-		coClient, err = conditionOrcapi.NewClient(c.cfg.FdbCfg.Endpoint)
+	if c.cfg.CoCfg.ClientID == "" {
+		c.cfg.CoCfg.ClientID = "fleetscheduler-condition-api"
+	}
+
+	if c.cfg.CoCfg.DisableOAuth {
+		coClient, err = conditionOrcapi.NewClient(c.cfg.CoCfg.Endpoint)
 	} else {
 		var token string
 
-		token, err = accessToken(c.ctx, model.ConditionsAPI, c.cfg.FdbCfg, true)
+		token, err = accessToken(c.ctx, model.ConditionsAPI, c.cfg.CoCfg, true)
 		if err != nil {
-			return errors.Wrap(ErrAuth, string(model.ConditionsAPI) + err.Error())
+			return errors.Wrap(ErrAuth, string(model.ConditionsAPI)+err.Error())
 		}
 
-		coClient, err = conditionOrcapi.NewClient(c.cfg.FdbCfg.Endpoint, conditionOrcapi.WithAuthToken(token))
+		coClient, err = conditionOrcapi.NewClient(c.cfg.CoCfg.Endpoint, conditionOrcapi.WithAuthToken(token))
 	}
 
 	c.coClient = coClient
@@ -112,7 +115,7 @@ func newFleetDBClientWithOAuth(ctx context.Context, cfg *app.ConfigOIDC, logger 
 	if cfg.ClientID != "" {
 		clientID = cfg.ClientID
 	} else {
-		clientID = "fleet-scheduler"
+		clientID = "fleetscheduler-serverservice-api"
 	}
 
 	// setup oauth

@@ -17,16 +17,12 @@ type (
 )
 
 const (
+	AppName string = "fleetscheduler"
+
 	ServerserviceAPI APIKind = "serverservice"
 	ConditionsAPI    APIKind = "conditions"
-
-	StoreKindServerservice StoreKind = "serverservice"
 
 	LogLevelInfo  LogLevel = "info"
 	LogLevelDebug LogLevel = "debug"
 	LogLevelTrace LogLevel = "trace"
-
-	ConcurrencyDefault = 5
-	ProfilingEndpoint  = "localhost:9091"
-	MetricsEndpoint    = "0.0.0.0:9090"
 )

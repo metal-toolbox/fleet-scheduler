@@ -3,16 +3,18 @@ package app
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/adrg/xdg"
+	"github.com/metal-toolbox/fleet-scheduler/internal/model"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
 
 const (
-	config_env_variable_name = "FLEET_SCHEDULER_CONFIG"
+	config_env_variable_name = "FLEETSCHEDULER_CONFIG"
 
-	LogLevelInfo = "info"
+	LogLevelInfo  = "info"
 	LogLevelDebug = "debug"
 	LogLevelTrace = "trace"
 )
@@ -22,19 +24,17 @@ type Configuration struct {
 	// one of - info, debug, trace
 	LogLevel string `mapstructure:"log_level"`
 
-	// CSV file path when StoreKind is set to csv.
-	CsvFile string `mapstructure:"csv_file"`
-
 	// FacilityCode limits this fleet scheduler to events in a facility.
 	FacilityCode string `mapstructure:"facility_code"`
 
-	// FleetDBConfig defines the fleetdb (serverservice) client configuration parameters
+	// Defines the fleetdb (serverservice) client configuration parameters
 	FdbCfg *ConfigOIDC `mapstructure:"fleetdb_api"`
+	// Defines the condition orchestrator client configuration parameters
 	CoCfg *ConfigOIDC `mapstructure:"conditionorc_api"`
 }
 
 type ConfigOIDC struct {
-	// Disable skips OAuth setup
+	// Skips OAuth setup if true
 	DisableOAuth bool `mapstructure:"disable_oauth"`
 
 	// ServerService OAuth2 parameters
@@ -49,7 +49,11 @@ type ConfigOIDC struct {
 
 func loadConfig(path string) (*Configuration, error) {
 	cfg := &Configuration{}
-	viper.AutomaticEnv()
+	v := viper.New()
+	v.SetEnvPrefix(model.AppName)
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	v.AutomaticEnv()
+
 	h, err := openConfig(path)
 	if err != nil {
 		return cfg, err
@@ -68,12 +72,31 @@ func loadConfig(path string) (*Configuration, error) {
 		return cfg, err
 	}
 
+	err = loadEnvOverrides(cfg, v)
+	if err != nil {
+		return cfg, err
+	}
+
 	err = validateClientParams(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	return cfg, nil
+}
+
+func loadEnvOverrides(cfg *Configuration, v *viper.Viper) error {
+	cfg.FdbCfg.ClientSecret = v.GetString("serverservice.oidc.client.secret")
+	if cfg.FdbCfg.ClientSecret == "" {
+		return errors.New("FLEETSCHEDULER_SERVERSERVICE_OIDC_CLIENT_SECRET was empty")
+	}
+
+	cfg.CoCfg.ClientSecret = v.GetString("conditionorc.oidc.client.secret")
+	if cfg.FdbCfg.ClientSecret == "" {
+		return errors.New("FLEETSCHEDULER_CONDITIONORC_OIDC_CLIENT_SECRET was empty")
+	}
+
+	return nil
 }
 
 func validateClientParams(cfg *Configuration) error {
@@ -85,8 +108,8 @@ func validateClientParams(cfg *Configuration) error {
 		if cfg.LogLevel != LogLevelInfo &&
 			cfg.LogLevel != LogLevelDebug &&
 			cfg.LogLevel != LogLevelTrace {
-				return errors.Wrap(errCfgInvalid, "LogLevel")
-			}
+			return errors.Wrap(errCfgInvalid, "LogLevel")
+		}
 	}
 
 	// FleetDB (serverservice) Configuration
@@ -111,7 +134,7 @@ func validateClientParams(cfg *Configuration) error {
 	return nil
 }
 
-func validateOIDCConfig(cfg* ConfigOIDC, err error) error {
+func validateOIDCConfig(cfg *ConfigOIDC, err error) error {
 	if cfg.Endpoint == "" {
 		return errors.Wrap(err, "endpoint")
 	}

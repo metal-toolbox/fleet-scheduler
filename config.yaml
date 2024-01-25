@@ -2,8 +2,8 @@ log_level: debug
 store_kind: fleetscheduler
 facility_code: sandbox
 fleetdb_api:
-  endpoint: http://192.168.1.191:8000
-  disable_oauth: true
+  endpoint: http://localhost:8000
+  disable_oauth: false
 conditionorc_api:
-  endpoint: http://192.168.1.191:9001
-  disable_oauth: true
+  endpoint: http://localhost:9001
+  disable_oauth: false

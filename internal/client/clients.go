@@ -66,9 +66,10 @@ func (c *Client) newFleetDBClient() error {
 			// retryablehttp ignores 500 and all errors above 501. So we want to make sure those are logged.
 			// https://github.com/hashicorp/go-retryablehttp/blob/4165cf8897205a879a06b20d1ed0a2a76fbb6a17/client.go#L521C80-L521C100
 			if r.StatusCode == http.StatusInternalServerError || r.StatusCode > http.StatusNotImplemented {
-				b, err := io.ReadAll(r.Body)
-				if err != nil {
-					c.logger.Warn("fleetDB (serverservice) query returned 500 error, got error reading body: ", err.Error())
+				// named newErr so the linter doesnt get mad
+				b, newErr := io.ReadAll(r.Body)
+				if newErr != nil {
+					c.logger.Warn("fleetDB (serverservice) query returned 500 error, got error reading body: ", newErr.Error())
 					return
 				}
 
@@ -112,9 +113,10 @@ func (c *Client) newConditionOrcClient() error {
 			// retryablehttp ignores 500 and all errors above 501. So we want to make sure those are logged.
 			// https://github.com/hashicorp/go-retryablehttp/blob/4165cf8897205a879a06b20d1ed0a2a76fbb6a17/client.go#L521C80-L521C100
 			if r.StatusCode == http.StatusInternalServerError || r.StatusCode > http.StatusNotImplemented {
-				b, err := io.ReadAll(r.Body)
-				if err != nil {
-					c.logger.Warn("conditionOrc query returned 500 error, got error reading body: ", err.Error())
+				// named newErr so the linter doesnt get mad
+				b, newErr := io.ReadAll(r.Body)
+				if newErr != nil {
+					c.logger.Warn("conditionOrc query returned 500 error, got error reading body: ", newErr.Error())
 					return
 				}
 

@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
 	"log"
 
 	"github.com/equinix-labs/otel-init-go/otelinit"
@@ -11,11 +13,11 @@ import (
 	"golang.org/x/net/context"
 )
 
-var cmdInventory = &cobra.Command{
-	Use:   "inventory",
-	Short: "gather all servers and create invetory for them",
+var cmdTest = &cobra.Command{
+	Use:   "test",
+	Short: "test",
 	Run: func(cmd *cobra.Command, args []string) {
-		err := inventory(cmd.Context())
+		err := test(cmd.Context())
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -23,10 +25,11 @@ var cmdInventory = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(cmdInventory)
+	rootCmd.AddCommand(cmdTest)
 }
 
-func inventory(ctx context.Context) error {
+// This test command will be purged once I verify everything is functional
+func test(ctx context.Context) error {
 	otelCtx, otelShutdown := otelinit.InitOpenTelemetry(ctx, "fleet-scheduler")
 	defer otelShutdown(ctx)
 
@@ -41,17 +44,28 @@ func inventory(ctx context.Context) error {
 	loggerEntry := newApp.Logger.WithFields(logrus.Fields{"component": "store.serverservice"})
 	loggerEntry.Level = newApp.Logger.Level
 
-	newClient, err := client.New(newApp.Ctx, newApp.Cfg, loggerEntry)
+	// Just used to verify fleet-scheduler can authenticate
+	_, err = client.New(newApp.Ctx, newApp.Cfg, loggerEntry)
 	if err != nil {
 		return err
 	}
 
-	err = newClient.CreateConditionInventoryForAllServers()
+	// purge secrets from config before printing the config (for debug purposes)
+	newApp.Cfg.FdbCfg.ClientSecret = ""
+	newApp.Cfg.CoCfg.ClientSecret = ""
+
+	var prettyJSON bytes.Buffer
+	myJSON, err := json.Marshal(newApp.Cfg)
 	if err != nil {
 		return err
 	}
 
-	newApp.Logger.Info("Task: 'CreateConditionInventoryForAllServers' complete")
+	err = json.Indent(&prettyJSON, myJSON, "", "\t")
+	if err != nil {
+		return err
+	}
+
+	newApp.Logger.Info("Config: ", prettyJSON.String())
 
 	return nil
 }

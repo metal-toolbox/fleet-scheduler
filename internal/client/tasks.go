@@ -33,16 +33,16 @@ func (c *Client) CreateConditionInventoryForAllServers() error {
 	return nil
 }
 
-func (c *Client) GatherServersNonBlocking(page_size int) (chan fleetDBapi.Server, *semaphore.Weighted, error) {
+func (c *Client) GatherServersNonBlocking(pageSize int) (chan fleetDBapi.Server, *semaphore.Weighted, error) {
 	if c.fdbClient == nil {
 		return nil, nil, ErrSsClientIsNil
 	}
 
 	serverCh := make(chan fleetDBapi.Server)
-	concLimiter := semaphore.NewWeighted(int64(page_size * page_size))
+	concLimiter := semaphore.NewWeighted(int64(pageSize * pageSize))
 
 	go func() {
-		c.gatherServers(page_size, serverCh, concLimiter)
+		c.gatherServers(pageSize, serverCh, concLimiter)
 	}()
 
 	return serverCh, concLimiter, nil

@@ -7,10 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	cfgFile string
-	reAuth  bool
-)
+var cfgFile string
 
 var rootCmd = &cobra.Command{
 	Use:   "fleet-scheduler",
@@ -29,5 +26,4 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "set config file path. Default location is in the env variable FLEET_SCHEDULER_CONFIG")
-	rootCmd.PersistentFlags().BoolVar(&reAuth, "reauth", false, "re-authenticate with oauth services")
 }

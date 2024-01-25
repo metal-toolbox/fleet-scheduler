@@ -1,6 +1,6 @@
 module github.com/metal-toolbox/fleet-scheduler
 
-go 1.21.1
+go 1.21
 
 require (
 	github.com/adrg/xdg v0.4.0
@@ -10,24 +10,19 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/metal-toolbox/conditionorc v1.0.3
 	github.com/metal-toolbox/rivets v0.2.2
-	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20220510032225-4f9f17eaec4c
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.18.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
-	github.com/zalando/go-keyring v0.2.3
 	go.hollow.sh/serverservice v0.16.2
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.47.0
 	golang.org/x/net v0.20.0
 	golang.org/x/oauth2 v0.16.0
 	golang.org/x/sync v0.6.0
-	gopkg.in/square/go-jose.v2 v2.6.0
 )
 
 require (
-	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/banzaicloud/logrus-runtime-formatter v0.0.0-20190729070250-5ae5475bae5e // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bmc-toolbox/common v0.0.0-20230717121556-5eb9915a8a5a // indirect
@@ -37,7 +32,6 @@ require (
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/chenzhuoyu/iasm v0.9.1 // indirect
 	github.com/cockroachdb/cockroach-go/v2 v2.3.5 // indirect
-	github.com/danieljoos/wincred v1.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/ericlagergren/decimal v0.0.0-20221120152707-495c53812d05 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -52,7 +46,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.16.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0 // indirect
@@ -139,5 +132,6 @@ require (
 	google.golang.org/grpc v1.59.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
+	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

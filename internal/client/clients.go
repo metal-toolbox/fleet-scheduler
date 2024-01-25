@@ -12,12 +12,11 @@ import (
 	// "github.com/pkg/errors"
 	"github.com/coreos/go-oidc"
 	"github.com/hashicorp/go-retryablehttp"
-	conditionOrcapi "github.com/metal-toolbox/conditionorc/pkg/api/v1/client"
+	conditionOrcApi "github.com/metal-toolbox/conditionorc/pkg/api/v1/client"
 	"github.com/metal-toolbox/fleet-scheduler/internal/app"
-	"github.com/metal-toolbox/fleet-scheduler/internal/model"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	fleetDBapi "go.hollow.sh/serverservice/pkg/api/v1"
+	fleetDBApi "go.hollow.sh/serverservice/pkg/api/v1"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -25,8 +24,8 @@ import (
 const timeout = 30 * time.Second
 
 type Client struct {
-	fdbClient *fleetDBapi.Client
-	coClient  *conditionOrcapi.Client
+	fdbClient *fleetDBApi.Client
+	coClient  *conditionOrcApi.Client
 	cfg       *app.Configuration
 	ctx       context.Context
 	logger    *logrus.Entry
@@ -53,24 +52,48 @@ func New(ctx context.Context, cfg *app.Configuration, logger *logrus.Entry) (*Cl
 }
 
 func (c *Client) newFleetDBClient() error {
-	var fdbClient *fleetDBapi.Client
-	var err error
-
 	if c.cfg == nil {
 		return ErrNilConfig
 	}
 
+	var err error
+	var client *http.Client
+	var secret string
 	if c.cfg.FdbCfg.DisableOAuth {
-		fdbClient, err = newFleetDBClientWithoutOAuth(c.cfg.FdbCfg, c.logger)
+		secret = "dummy"
+
+		logHookFunc := func(l retryablehttp.Logger, r *http.Response) {
+			// retryablehttp ignores 500 and all errors above 501. So we want to make sure those are logged.
+			// https://github.com/hashicorp/go-retryablehttp/blob/4165cf8897205a879a06b20d1ed0a2a76fbb6a17/client.go#L521C80-L521C100
+			if r.StatusCode == http.StatusInternalServerError || r.StatusCode > http.StatusNotImplemented {
+				b, err := io.ReadAll(r.Body)
+				if err != nil {
+					c.logger.Warn("fleetDB (serverservice) query returned 500 error, got error reading body: ", err.Error())
+					return
+				}
+
+				c.logger.Warn("fleetDB (serverservice) query returned 500 error, body: ", string(b))
+			}
+		}
+		client = c.setUpClientWithoutOAuth(logHookFunc)
 	} else {
-		fdbClient, err = newFleetDBClientWithOAuth(c.ctx, c.cfg.FdbCfg, c.logger)
+		secret = c.cfg.FdbCfg.ClientSecret
+
+		client, err = c.setUpClientWithOAuth(c.cfg.FdbCfg)
+		if err != nil {
+			return err
+		}
 	}
 
+	c.fdbClient, err = fleetDBApi.NewClientWithToken(
+		secret,
+		c.cfg.FdbCfg.Endpoint,
+		client,
+	)
 	if err != nil {
 		return err
 	}
 
-	c.fdbClient = fdbClient
 	return err
 }
 
@@ -79,54 +102,83 @@ func (c *Client) newConditionOrcClient() error {
 		return ErrNilConfig
 	}
 
-	var coClient *conditionOrcapi.Client
 	var err error
-
-	if c.cfg.CoCfg.ClientID == "" {
-		c.cfg.CoCfg.ClientID = "fleetscheduler-condition-api"
-	}
-
+	var client *http.Client
+	var secret string
 	if c.cfg.CoCfg.DisableOAuth {
-		coClient, err = conditionOrcapi.NewClient(c.cfg.CoCfg.Endpoint)
-	} else {
-		var token string
+		secret = "dummy"
 
-		token, err = accessToken(c.ctx, model.ConditionsAPI, c.cfg.CoCfg, true)
-		if err != nil {
-			return errors.Wrap(ErrAuth, string(model.ConditionsAPI)+err.Error())
+		logHookFunc := func(l retryablehttp.Logger, r *http.Response) {
+			// retryablehttp ignores 500 and all errors above 501. So we want to make sure those are logged.
+			// https://github.com/hashicorp/go-retryablehttp/blob/4165cf8897205a879a06b20d1ed0a2a76fbb6a17/client.go#L521C80-L521C100
+			if r.StatusCode == http.StatusInternalServerError || r.StatusCode > http.StatusNotImplemented {
+				b, err := io.ReadAll(r.Body)
+				if err != nil {
+					c.logger.Warn("conditionOrc query returned 500 error, got error reading body: ", err.Error())
+					return
+				}
+
+				c.logger.Warn("conditionOrc query returned 500 error, body: ", string(b))
+			}
 		}
+		client = c.setUpClientWithoutOAuth(logHookFunc)
+	} else {
+		secret = c.cfg.CoCfg.ClientSecret
 
-		coClient, err = conditionOrcapi.NewClient(c.cfg.CoCfg.Endpoint, conditionOrcapi.WithAuthToken(token))
+		client, err = c.setUpClientWithOAuth(c.cfg.CoCfg)
+		if err != nil {
+			return err
+		}
 	}
 
-	c.coClient = coClient
+	c.coClient, err = conditionOrcApi.NewClient(
+		c.cfg.CoCfg.Endpoint,
+		conditionOrcApi.WithAuthToken(secret),
+		conditionOrcApi.WithHTTPClient(client),
+	)
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 
 //// Client initialize helpers
 
-func newFleetDBClientWithOAuth(ctx context.Context, cfg *app.ConfigOIDC, logger *logrus.Entry) (*fleetDBapi.Client, error) {
-	provider, err := oidc.NewProvider(ctx, cfg.IssuerEndpoint)
+func (c *Client) setUpClientWithoutOAuth(logHookFunc func(l retryablehttp.Logger, r *http.Response)) *http.Client {
+	// set up client
+	retryableClient := retryablehttp.NewClient()
+	retryableClient.HTTPClient = otelhttp.DefaultClient // use otel client so we can collect telemetry
+	// log hook fo 500 errors since the the retryablehttp client masks them
+	retryableClient.ResponseLogHook = logHookFunc
+
+	if c.logger.Level < logrus.DebugLevel {
+		retryableClient.Logger = nil
+	} else {
+		retryableClient.Logger = c.logger
+	}
+
+	client := retryableClient.StandardClient()
+	client.Timeout = timeout
+
+	return client
+}
+
+func (c *Client) setUpClientWithOAuth(cfg *app.ConfigOIDC) (*http.Client, error) {
+	provider, err := oidc.NewProvider(c.ctx, cfg.IssuerEndpoint)
 	if err != nil {
 		return nil, err
 	}
 
-	var clientID string
-	if cfg.ClientID != "" {
-		clientID = cfg.ClientID
-	} else {
-		clientID = "fleetscheduler-serverservice-api"
-	}
-
 	// setup oauth
 	oauthConfig := clientcredentials.Config{
-		ClientID:       clientID,
+		ClientID:       cfg.ClientID,
 		ClientSecret:   cfg.ClientSecret,
 		TokenURL:       provider.Endpoint().TokenURL,
 		Scopes:         cfg.ClientScopes,
 		EndpointParams: url.Values{"audience": []string{cfg.AudienceEndpoint}},
 	}
-	oAuthclient := oauthConfig.Client(ctx)
+	oAuthclient := oauthConfig.Client(c.ctx)
 
 	// set up client
 	retryableClient := retryablehttp.NewClient()
@@ -134,59 +186,14 @@ func newFleetDBClientWithOAuth(ctx context.Context, cfg *app.ConfigOIDC, logger 
 	retryableClient.HTTPClient.Transport = oAuthclient.Transport
 	retryableClient.HTTPClient.Jar = oAuthclient.Jar
 
-	if logger.Level < logrus.DebugLevel {
+	if c.logger.Level < logrus.DebugLevel {
 		retryableClient.Logger = nil
 	} else {
-		retryableClient.Logger = logger
+		retryableClient.Logger = c.logger
 	}
 
 	client := retryableClient.StandardClient()
 	client.Timeout = timeout
 
-	return fleetDBapi.NewClientWithToken(
-		cfg.ClientSecret,
-		cfg.Endpoint,
-		client,
-	)
-}
-
-func newFleetDBClientWithoutOAuth(cfg *app.ConfigOIDC, logger *logrus.Entry) (*fleetDBapi.Client, error) {
-	if cfg == nil {
-		return nil, ErrNilConfig
-	}
-
-	logHookFunc := func(l retryablehttp.Logger, r *http.Response) {
-		// retryablehttp ignores 500 and all errors above 501. So we want to make sure those are logged.
-		// https://github.com/hashicorp/go-retryablehttp/blob/4165cf8897205a879a06b20d1ed0a2a76fbb6a17/client.go#L521C80-L521C100
-		if r.StatusCode == http.StatusInternalServerError || r.StatusCode > http.StatusNotImplemented {
-			b, err := io.ReadAll(r.Body)
-			if err != nil {
-				logger.Warn("fleetDBapi (serverservice) query returned 500 error, got error reading body: ", err.Error())
-				return
-			}
-
-			logger.Warn("fleetDB (serverservice) query returned 500 error, body: ", string(b))
-		}
-	}
-
-	// set up client
-	retryableClient := retryablehttp.NewClient()
-	retryableClient.HTTPClient = otelhttp.DefaultClient // use otel client so we can collect telemetry
-	// log hook fo 500 errors since the the retryablehttp client masks them
-	retryableClient.ResponseLogHook = logHookFunc
-
-	if logger.Level < logrus.DebugLevel {
-		retryableClient.Logger = nil
-	} else {
-		retryableClient.Logger = logger
-	}
-
-	client := retryableClient.StandardClient()
-	client.Timeout = timeout
-
-	return fleetDBapi.NewClientWithToken(
-		"dummy",
-		cfg.Endpoint,
-		client,
-	)
+	return client, nil
 }

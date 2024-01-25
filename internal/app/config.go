@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	config_env_variable_name = "FLEETSCHEDULER_CONFIG"
+	config_env_variable_name = "FLEET_SCHEDULER_CONFIG"
 
 	LogLevelInfo  = "info"
 	LogLevelDebug = "debug"
@@ -88,12 +88,12 @@ func loadConfig(path string) (*Configuration, error) {
 func loadEnvOverrides(cfg *Configuration, v *viper.Viper) error {
 	cfg.FdbCfg.ClientSecret = v.GetString("serverservice.oidc.client.secret")
 	if cfg.FdbCfg.ClientSecret == "" {
-		return errors.New("FLEETSCHEDULER_SERVERSERVICE_OIDC_CLIENT_SECRET was empty")
+		return errors.New("FLEET_SCHEDULER_SERVERSERVICE_OIDC_CLIENT_SECRET was empty")
 	}
 
 	cfg.CoCfg.ClientSecret = v.GetString("conditionorc.oidc.client.secret")
 	if cfg.FdbCfg.ClientSecret == "" {
-		return errors.New("FLEETSCHEDULER_CONDITIONORC_OIDC_CLIENT_SECRET was empty")
+		return errors.New("FLEET_SCHEDULER_CONDITIONORC_OIDC_CLIENT_SECRET was empty")
 	}
 
 	return nil
@@ -122,11 +122,12 @@ func validateClientParams(cfg *Configuration) error {
 	if cfg.FacilityCode == "" {
 		return errors.Wrap(errCfgInvalid, "Facility Code")
 	}
-	err := validateOIDCConfig(cfg.FdbCfg, errors.Wrap(errCfgInvalid, "fleetdb_api is invalid"))
+
+	err := validateOIDCConfig(cfg.FdbCfg, model.DefaultFleetDBClientID, errors.Wrap(errCfgInvalid, "fleetdb_api is invalid"))
 	if err != nil {
 		return err
 	}
-	err = validateOIDCConfig(cfg.CoCfg, errors.Wrap(errCfgInvalid, "conditionorc_api is invalid"))
+	err = validateOIDCConfig(cfg.CoCfg, model.DefaultConditionOrcClientID, errors.Wrap(errCfgInvalid, "conditionorc_api is invalid"))
 	if err != nil {
 		return err
 	}
@@ -134,14 +135,14 @@ func validateClientParams(cfg *Configuration) error {
 	return nil
 }
 
-func validateOIDCConfig(cfg *ConfigOIDC, err error) error {
+func validateOIDCConfig(cfg *ConfigOIDC, defaultClientID string, err error) error {
 	if cfg.Endpoint == "" {
 		return errors.Wrap(err, "endpoint")
 	}
 
 	if !cfg.DisableOAuth {
 		if cfg.ClientID == "" {
-			return errors.Wrap(err, "oidc_client_id")
+			cfg.ClientID = defaultClientID
 		}
 		if cfg.IssuerEndpoint == "" {
 			return errors.Wrap(err, "oidc_issuer_endpoint")

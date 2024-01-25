@@ -9,7 +9,7 @@ import (
 	fleetDBapi "go.hollow.sh/serverservice/pkg/api/v1"
 )
 
-func (c* Client) CreateConditionInventoryForAllServers() error {
+func (c *Client) CreateConditionInventoryForAllServers() error {
 	// Start thread to start collecting servers
 	serverCh, concLimiter, err := c.GatherServersNonBlocking(model.ConcurrencyDefault) // TODO; Swap out conc default with actual
 	if err != nil {
@@ -17,13 +17,13 @@ func (c* Client) CreateConditionInventoryForAllServers() error {
 	}
 
 	// Loop through servers and create conditions
-	for server := range(serverCh) {
+	for server := range serverCh {
 		c.logger.Logger.Info("Server UUID: ", server.UUID)
 
 		err := c.CreateConditionInventory(server.UUID)
 		if err != nil {
 			c.logger.WithFields(logrus.Fields{
-					"server": server.UUID,
+				"server": server.UUID,
 			}).Logger.Error("Failed to create condition")
 		}
 
@@ -39,7 +39,7 @@ func (c *Client) GatherServersNonBlocking(page_size int) (chan fleetDBapi.Server
 	}
 
 	serverCh := make(chan fleetDBapi.Server)
-	concLimiter := semaphore.NewWeighted(int64(page_size*page_size))
+	concLimiter := semaphore.NewWeighted(int64(page_size * page_size))
 
 	go func() {
 		c.gatherServers(page_size, serverCh, concLimiter)

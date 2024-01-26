@@ -36,26 +36,29 @@ func test(ctx context.Context) error {
 	otelCtxWithCancel, cancelFunc := context.WithCancel(otelCtx)
 	defer cancelFunc()
 
-	newApp, err := app.New(otelCtxWithCancel, cfgFile)
+	cfg, err := app.LoadConfig(cfgFile)
 	if err != nil {
 		return err
 	}
 
-	loggerEntry := newApp.Logger.WithFields(logrus.Fields{"component": "store.serverservice"})
-	loggerEntry.Level = newApp.Logger.Level
+	logger := logrus.New()
+	logger.Level, err = logrus.ParseLevel(cfg.LogLevel)
+	if err != nil {
+		return err
+	}
 
 	// Just used to verify fleet-scheduler can authenticate
-	_, err = client.New(newApp.Ctx, newApp.Cfg, loggerEntry)
+	_, err = client.New(otelCtxWithCancel, cfg, logger)
 	if err != nil {
 		return err
 	}
 
 	// purge secrets from config before printing the config (for debug purposes)
-	newApp.Cfg.FdbCfg.ClientSecret = ""
-	newApp.Cfg.CoCfg.ClientSecret = ""
+	cfg.FdbCfg.ClientSecret = ""
+	cfg.CoCfg.ClientSecret = ""
 
 	var prettyJSON bytes.Buffer
-	myJSON, err := json.Marshal(newApp.Cfg)
+	myJSON, err := json.Marshal(cfg)
 	if err != nil {
 		return err
 	}
@@ -65,7 +68,7 @@ func test(ctx context.Context) error {
 		return err
 	}
 
-	newApp.Logger.Info("Config: ", prettyJSON.String())
+	logger.Info("Config: ", prettyJSON.String())
 
 	return nil
 }

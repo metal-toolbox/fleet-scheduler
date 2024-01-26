@@ -6,8 +6,7 @@ GIT_SUMMARY := $(shell git describe --tags --dirty --always)
 VERSION     := $(shell git describe --tags 2> /dev/null)
 BUILD_DATE  := $(shell date +%s)
 GIT_COMMIT_FULL  := $(shell git rev-parse HEAD)
-GO_VERSION := $(shell expr `go version |cut -d ' ' -f3 |cut -d. -f2` \>= 16)
-DOCKER_IMAGE_INBAND  := "ghcr.io/metal-toolbox/fleet-scheduler"
+GO_VERSION := $(shell expr `go version |cut -d ' ' -f3 |cut -d. -f2` \>= 20)
 DOCKER_IMAGE  := "ghcr.io/metal-toolbox/fleet-scheduler"
 REPO := "https://github.com/metal-toolbox/fleet-scheduler.git"
 
@@ -25,12 +24,12 @@ lint:
 
 ## Go mod
 go-mod:
-	go mod tidy -compat=1.19 && go mod vendor
+	go mod tidy -compat=1.20 && go mod vendor
 
 ## build osx bin
 build-osx:
 ifeq ($(GO_VERSION), 0)
-	$(error build requies go version 1.17.n or higher)
+	$(error build requies go version 1.20 or higher)
 endif
 	GOOS=darwin GOARCH=amd64 go build -o $(PROJECT_NAME) \
 		-ldflags \
@@ -43,7 +42,7 @@ endif
 ## Build linux bin
 build-linux:
 ifeq ($(GO_VERSION), 0)
-	$(error build requies go version 1.16.n or higher)
+	$(error build requies go version 1.20 or higher)
 endif
 	GOOS=linux GOARCH=amd64 go build -o $(PROJECT_NAME) \
 		-ldflags \
@@ -69,7 +68,7 @@ push-image-devel: build-image
 
 ## push docker image
 push-image:
-	docker push ${DOCKER_IMAGE_INBAND}:latest
+	docker push ${DOCKER_IMAGE}:latest
 
 # https://gist.github.com/prwhite/8168133
 # COLORS

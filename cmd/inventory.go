@@ -33,15 +33,18 @@ func inventory(ctx context.Context) error {
 	otelCtxWithCancel, cancelFunc := context.WithCancel(otelCtx)
 	defer cancelFunc()
 
-	newApp, err := app.New(otelCtxWithCancel, cfgFile)
+	cfg, err := app.LoadConfig(cfgFile)
 	if err != nil {
 		return err
 	}
 
-	loggerEntry := newApp.Logger.WithFields(logrus.Fields{"component": "store.serverservice"})
-	loggerEntry.Level = newApp.Logger.Level
+	logger := logrus.New()
+	logger.Level, err = logrus.ParseLevel(cfg.LogLevel)
+	if err != nil {
+		return err
+	}
 
-	newClient, err := client.New(newApp.Ctx, newApp.Cfg, loggerEntry)
+	newClient, err := client.New(otelCtxWithCancel, cfg, logger)
 	if err != nil {
 		return err
 	}
@@ -51,7 +54,7 @@ func inventory(ctx context.Context) error {
 		return err
 	}
 
-	newApp.Logger.Info("Task: 'CreateConditionInventoryForAllServers' complete")
+	logger.Info("Task: 'CreateConditionInventoryForAllServers' complete")
 
 	return nil
 }

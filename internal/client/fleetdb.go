@@ -6,11 +6,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/semaphore"
 
-	fleetDBrivets "github.com/metal-toolbox/rivets/serverservice"
-	fleetDBapi "go.hollow.sh/serverservice/pkg/api/v1"
+	fleetDBRivets "github.com/metal-toolbox/rivets/serverservice"
+	fleetDBApi "go.hollow.sh/serverservice/pkg/api/v1"
 )
 
-func (c *Client) gatherServers(pageSize int, serverCh chan fleetDBapi.Server, concLimiter *semaphore.Weighted) {
+func (c *Client) gatherServers(pageSize int, serverCh chan *fleetDBApi.Server, concLimiter *semaphore.Weighted) {
 	// signal to receiver that we are done
 	defer close(serverCh)
 
@@ -18,7 +18,7 @@ func (c *Client) gatherServers(pageSize int, serverCh chan fleetDBapi.Server, co
 	// Dont change page size
 	servers, response, err := c.getServerPage(pageSize, 1)
 	if err != nil {
-		c.logger.WithFields(logrus.Fields{
+		c.log.WithFields(logrus.Fields{
 			"pageSize":  pageSize,
 			"pageIndex": 1,
 		}).Logger.Error("Failed to get list of servers")
@@ -27,15 +27,15 @@ func (c *Client) gatherServers(pageSize int, serverCh chan fleetDBapi.Server, co
 	totalPages := response.TotalPages
 
 	if !concLimiter.TryAcquire(int64(response.PageSize)) {
-		c.logger.Error("Failed to acquire semaphore! Going to attempt to continue.")
+		c.log.Error("Failed to acquire semaphore! Going to attempt to continue.")
 	}
 
 	// send first page of servers to the channel
 	for i := range servers {
-		serverCh <- servers[i]
+		serverCh <- &servers[i]
 	}
 
-	c.logger.WithFields(logrus.Fields{
+	c.log.WithFields(logrus.Fields{
 		"index":      1,
 		"iterations": totalPages,
 		"got":        len(servers),
@@ -45,7 +45,7 @@ func (c *Client) gatherServers(pageSize int, serverCh chan fleetDBapi.Server, co
 	for i := 2; i <= totalPages; i++ {
 		servers, response, err = c.getServerPage(pageSize, i)
 		if err != nil {
-			c.logger.WithFields(logrus.Fields{
+			c.log.WithFields(logrus.Fields{
 				"pageSize":  pageSize,
 				"pageIndex": i,
 			}).Logger.Error("Failed to get page of servers")
@@ -53,7 +53,7 @@ func (c *Client) gatherServers(pageSize int, serverCh chan fleetDBapi.Server, co
 			continue
 		}
 
-		c.logger.WithFields(logrus.Fields{
+		c.log.WithFields(logrus.Fields{
 			"index":      i,
 			"iterations": totalPages,
 			"got":        len(servers),
@@ -67,20 +67,20 @@ func (c *Client) gatherServers(pageSize int, serverCh chan fleetDBapi.Server, co
 		}
 
 		for i := range servers {
-			serverCh <- servers[i]
+			serverCh <- &servers[i]
 		}
 	}
 }
 
-func (c *Client) getServerPage(pageSize, page int) ([]fleetDBapi.Server, *fleetDBapi.ServerResponse, error) {
-	params := &fleetDBapi.ServerListParams{
+func (c *Client) getServerPage(pageSize, page int) ([]fleetDBApi.Server, *fleetDBApi.ServerResponse, error) {
+	params := &fleetDBApi.ServerListParams{
 		FacilityCode: c.cfg.FacilityCode,
-		AttributeListParams: []fleetDBapi.AttributeListParams{
+		AttributeListParams: []fleetDBApi.AttributeListParams{
 			{
-				Namespace: fleetDBrivets.ServerAttributeNSBmcAddress,
+				Namespace: fleetDBRivets.ServerAttributeNSBmcAddress,
 			},
 		},
-		PaginationParams: &fleetDBapi.PaginationParams{
+		PaginationParams: &fleetDBApi.PaginationParams{
 			Limit: pageSize,
 			Page:  page,
 		},

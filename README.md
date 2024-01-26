@@ -17,6 +17,17 @@ Fleet Scheduler jobs can be created within the value.yaml file of the [sandbox](
 
 Each job requires a few values in order to function.
 
+## Creating new tasks
+
+- Tasks need to be implemented in code within [Fleet-Scheduler](https://github.com/metal-toolbox/fleet-scheduler)
+- Tasks are implemented as [cobra](https://github.com/spf13/cobra) command line commands within /cmd
+- Take a look at /cmd/inventory.go for a good example.
+
+## Creating new jobs
+
+You just need to add the job to the [value.yaml](https://github.com/metal-toolbox/sandbox) file.
+Each job requires a few values in order to function.
+
 ### Values for creating new jobs
 
 Job Values required and location to explain them with `kubectl explain <field>`

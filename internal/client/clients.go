@@ -7,9 +7,6 @@ import (
 	"net/url"
 	"time"
 
-	// "github.com/metal-toolbox/fleet-scheduler/internal/model"
-
-	// "github.com/pkg/errors"
 	"github.com/coreos/go-oidc"
 	"github.com/hashicorp/go-retryablehttp"
 	conditionOrcApi "github.com/metal-toolbox/conditionorc/pkg/api/v1/client"
@@ -27,15 +24,15 @@ type Client struct {
 	fdbClient *fleetDBApi.Client
 	coClient  *conditionOrcApi.Client
 	cfg       *app.Configuration
+	log       *logrus.Logger
 	ctx       context.Context
-	logger    *logrus.Entry
 }
 
-func New(ctx context.Context, cfg *app.Configuration, logger *logrus.Entry) (*Client, error) {
+func New(ctx context.Context, cfg *app.Configuration, log *logrus.Logger) (*Client, error) {
 	client := &Client{
-		cfg:    cfg,
-		ctx:    ctx,
-		logger: logger,
+		cfg: cfg,
+		log: log,
+		ctx: ctx,
 	}
 
 	err := client.newFleetDBClient()
@@ -53,7 +50,7 @@ func New(ctx context.Context, cfg *app.Configuration, logger *logrus.Entry) (*Cl
 
 func (c *Client) newFleetDBClient() error {
 	if c.cfg == nil {
-		return ErrNilConfig
+		return app.ErrNilConfig
 	}
 
 	var err error
@@ -61,25 +58,9 @@ func (c *Client) newFleetDBClient() error {
 	var secret string
 	if c.cfg.FdbCfg.DisableOAuth {
 		secret = "dummy"
-
-		logHookFunc := func(l retryablehttp.Logger, r *http.Response) {
-			// retryablehttp ignores 500 and all errors above 501. So we want to make sure those are logged.
-			// https://github.com/hashicorp/go-retryablehttp/blob/4165cf8897205a879a06b20d1ed0a2a76fbb6a17/client.go#L521C80-L521C100
-			if r.StatusCode == http.StatusInternalServerError || r.StatusCode > http.StatusNotImplemented {
-				// named newErr so the linter doesnt get mad
-				b, newErr := io.ReadAll(r.Body)
-				if newErr != nil {
-					c.logger.Warn("fleetDB (serverservice) query returned 500 error, got error reading body: ", newErr.Error())
-					return
-				}
-
-				c.logger.Warn("fleetDB (serverservice) query returned 500 error, body: ", string(b))
-			}
-		}
 		client = c.setUpClientWithoutOAuth(logHookFunc)
 	} else {
 		secret = c.cfg.FdbCfg.ClientSecret
-
 		client, err = c.setUpClientWithOAuth(c.cfg.FdbCfg)
 		if err != nil {
 			return err
@@ -100,7 +81,7 @@ func (c *Client) newFleetDBClient() error {
 
 func (c *Client) newConditionOrcClient() error {
 	if c.cfg == nil {
-		return ErrNilConfig
+		return app.ErrNilConfig
 	}
 
 	var err error
@@ -108,25 +89,9 @@ func (c *Client) newConditionOrcClient() error {
 	var secret string
 	if c.cfg.CoCfg.DisableOAuth {
 		secret = "dummy"
-
-		logHookFunc := func(l retryablehttp.Logger, r *http.Response) {
-			// retryablehttp ignores 500 and all errors above 501. So we want to make sure those are logged.
-			// https://github.com/hashicorp/go-retryablehttp/blob/4165cf8897205a879a06b20d1ed0a2a76fbb6a17/client.go#L521C80-L521C100
-			if r.StatusCode == http.StatusInternalServerError || r.StatusCode > http.StatusNotImplemented {
-				// named newErr so the linter doesnt get mad
-				b, newErr := io.ReadAll(r.Body)
-				if newErr != nil {
-					c.logger.Warn("conditionOrc query returned 500 error, got error reading body: ", newErr.Error())
-					return
-				}
-
-				c.logger.Warn("conditionOrc query returned 500 error, body: ", string(b))
-			}
-		}
 		client = c.setUpClientWithoutOAuth(logHookFunc)
 	} else {
 		secret = c.cfg.CoCfg.ClientSecret
-
 		client, err = c.setUpClientWithOAuth(c.cfg.CoCfg)
 		if err != nil {
 			return err
@@ -154,10 +119,10 @@ func (c *Client) setUpClientWithoutOAuth(logHookFunc func(l retryablehttp.Logger
 	// log hook fo 500 errors since the the retryablehttp client masks them
 	retryableClient.ResponseLogHook = logHookFunc
 
-	if c.logger.Level < logrus.DebugLevel {
+	if c.log.Level < logrus.DebugLevel {
 		retryableClient.Logger = nil
 	} else {
-		retryableClient.Logger = c.logger
+		retryableClient.Logger = c.log
 	}
 
 	client := retryableClient.StandardClient()
@@ -188,14 +153,29 @@ func (c *Client) setUpClientWithOAuth(cfg *app.ConfigOIDC) (*http.Client, error)
 	retryableClient.HTTPClient.Transport = oAuthclient.Transport
 	retryableClient.HTTPClient.Jar = oAuthclient.Jar
 
-	if c.logger.Level < logrus.DebugLevel {
+	if c.log.Level < logrus.DebugLevel {
 		retryableClient.Logger = nil
 	} else {
-		retryableClient.Logger = c.logger
+		retryableClient.Logger = c.log
 	}
 
 	client := retryableClient.StandardClient()
 	client.Timeout = timeout
 
 	return client, nil
+}
+
+func logHookFunc(l retryablehttp.Logger, r *http.Response) {
+	// retryablehttp ignores 500 and all errors above 501. So we want to make sure those are logged.
+	// https://github.com/hashicorp/go-retryablehttp/blob/4165cf8897205a879a06b20d1ed0a2a76fbb6a17/client.go#L521C80-L521C100
+	if r.StatusCode == http.StatusInternalServerError || r.StatusCode > http.StatusNotImplemented {
+		// named newErr so the linter doesnt get mad
+		b, newErr := io.ReadAll(r.Body)
+		if newErr != nil {
+			l.Printf("query returned 500 error, got error reading body: %s", newErr.Error())
+			return
+		}
+
+		l.Printf("query returned 500 error, body: %s", string(b))
+	}
 }

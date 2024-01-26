@@ -9,7 +9,6 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
-      - darwin
     ldflags:
       - -X "github.com/metal-toolbox/fleet-scheduler/internal/version.AppVersion={{ .Version }}"
         -X "github.com/metal-toolbox/fleet-scheduler/internal/version.GoVersion={{ .Env.GOVERSION }}"

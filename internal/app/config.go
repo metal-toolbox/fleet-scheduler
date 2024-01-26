@@ -6,17 +6,19 @@ import (
 	"strings"
 
 	"github.com/adrg/xdg"
-	"github.com/metal-toolbox/fleet-scheduler/internal/model"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
 
 const (
-	configEnvVariableName = "FLEET_SCHEDULER_CONFIG"
+	appName string = "fleet-scheduler"
 
-	LogLevelInfo  = "info"
-	LogLevelDebug = "debug"
-	LogLevelTrace = "trace"
+	defaultFleetDBClientID      = "fleetscheduler-serverservice-api"
+	defaultConditionOrcClientID = "fleetscheduler-condition-api"
+
+	defaultConcurrencyCount = 4
+
+	configEnvVariableName = "FLEET_SCHEDULER_CONFIG"
 )
 
 type Configuration struct {
@@ -26,6 +28,9 @@ type Configuration struct {
 
 	// FacilityCode limits this fleet scheduler to events in a facility.
 	FacilityCode string `mapstructure:"facility_code"`
+
+	// Max threads allowed for communicating with other resources.
+	Concurrency int `mapstructure:"concurrency"`
 
 	// Defines the fleetdb (serverservice) client configuration parameters
 	FdbCfg *ConfigOIDC `mapstructure:"fleetdb_api"`
@@ -47,10 +52,10 @@ type ConfigOIDC struct {
 	ClientSecret     string   `mapstructure:"oidc_client_secret"`
 }
 
-func loadConfig(path string) (*Configuration, error) {
+func LoadConfig(path string) (*Configuration, error) {
 	cfg := &Configuration{}
 	v := viper.New()
-	v.SetEnvPrefix(model.AppName)
+	v.SetEnvPrefix(appName)
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
@@ -86,9 +91,9 @@ func loadConfig(path string) (*Configuration, error) {
 }
 
 func loadEnvOverrides(cfg *Configuration, v *viper.Viper) error {
-	cfg.FdbCfg.ClientSecret = v.GetString("serverservice.oidc.client.secret")
+	cfg.FdbCfg.ClientSecret = v.GetString("fleetdb.oidc.client.secret")
 	if cfg.FdbCfg.ClientSecret == "" {
-		return errors.New("FLEET_SCHEDULER_SERVERSERVICE_OIDC_CLIENT_SECRET was empty")
+		return errors.New("FLEET_SCHEDULER_FLEETDB_OIDC_CLIENT_SECRET was empty")
 	}
 
 	cfg.CoCfg.ClientSecret = v.GetString("conditionorc.oidc.client.secret")
@@ -100,32 +105,30 @@ func loadEnvOverrides(cfg *Configuration, v *viper.Viper) error {
 }
 
 func validateClientParams(cfg *Configuration) error {
-	errCfgInvalid := errors.New("Configuration is invalid")
-
 	if cfg.LogLevel == "" {
-		cfg.LogLevel = LogLevelInfo
-	} else if cfg.LogLevel != LogLevelInfo &&
-		cfg.LogLevel != LogLevelDebug &&
-		cfg.LogLevel != LogLevelTrace {
-		return errors.Wrap(errCfgInvalid, "LogLevel")
+		cfg.LogLevel = "debug"
+	}
+
+	if cfg.Concurrency <= 0 {
+		cfg.Concurrency = defaultConcurrencyCount
 	}
 
 	// FleetDB (serverservice) Configuration
 	if cfg.FdbCfg == nil {
-		return errors.Wrap(errCfgInvalid, "fleetdb_api entry doesnt exist")
+		return errors.Wrap(ErrInvalidConfig, "fleetdb_api entry doesnt exist")
 	}
 	if cfg.CoCfg == nil {
-		return errors.Wrap(errCfgInvalid, "conditionorc_api entry doesnt exist")
+		return errors.Wrap(ErrInvalidConfig, "conditionorc_api entry doesnt exist")
 	}
 	if cfg.FacilityCode == "" {
-		return errors.Wrap(errCfgInvalid, "Facility Code")
+		return errors.Wrap(ErrInvalidConfig, "Facility Code")
 	}
 
-	err := validateOIDCConfig(cfg.FdbCfg, model.DefaultFleetDBClientID, errors.Wrap(errCfgInvalid, "fleetdb_api is invalid"))
+	err := validateOIDCConfig(cfg.FdbCfg, defaultFleetDBClientID)
 	if err != nil {
 		return err
 	}
-	err = validateOIDCConfig(cfg.CoCfg, model.DefaultConditionOrcClientID, errors.Wrap(errCfgInvalid, "conditionorc_api is invalid"))
+	err = validateOIDCConfig(cfg.CoCfg, defaultConditionOrcClientID)
 	if err != nil {
 		return err
 	}
@@ -133,15 +136,17 @@ func validateClientParams(cfg *Configuration) error {
 	return nil
 }
 
-func validateOIDCConfig(cfg *ConfigOIDC, defaultClientID string, err error) error {
+func validateOIDCConfig(cfg *ConfigOIDC, defaultClientID string) error {
+	if cfg.ClientID == "" {
+		cfg.ClientID = defaultClientID
+	}
+	err := errors.Wrap(ErrInvalidConfig, cfg.ClientID)
+
 	if cfg.Endpoint == "" {
 		return errors.Wrap(err, "endpoint")
 	}
 
 	if !cfg.DisableOAuth {
-		if cfg.ClientID == "" {
-			cfg.ClientID = defaultClientID
-		}
 		if cfg.IssuerEndpoint == "" {
 			return errors.Wrap(err, "oidc_issuer_endpoint")
 		}

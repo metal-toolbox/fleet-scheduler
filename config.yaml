@@ -1,9 +1,9 @@
 log_level: debug
-store_kind: fleetscheduler
 facility_code: sandbox
+concurrency: 4 # max thread count allowed for communicating with other resources
 fleetdb_api:
   endpoint: http://localhost:8000
-  disable_oauth: false
+  disable_oauth: true
 conditionorc_api:
   endpoint: http://localhost:9001
-  disable_oauth: false
+  disable_oauth: true

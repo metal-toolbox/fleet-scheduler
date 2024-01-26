@@ -1,28 +1,25 @@
 package client
 
 import (
-	"github.com/metal-toolbox/fleet-scheduler/internal/model"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/semaphore"
 
 	// "github.com/sirupsen/logrus"
-	fleetDBapi "go.hollow.sh/serverservice/pkg/api/v1"
+	fleetDBApi "go.hollow.sh/serverservice/pkg/api/v1"
 )
 
 func (c *Client) CreateConditionInventoryForAllServers() error {
 	// Start thread to start collecting servers
-	serverCh, concLimiter, err := c.GatherServersNonBlocking(model.ConcurrencyDefault) // TODO; Swap out conc default with actual
+	serverCh, concLimiter, err := c.GatherServersNonBlocking(c.cfg.Concurrency)
 	if err != nil {
 		return err
 	}
 
 	// Loop through servers and create conditions
 	for server := range serverCh {
-		c.logger.Logger.Info("Server UUID: ", server.UUID)
-
 		err := c.CreateConditionInventory(server.UUID)
 		if err != nil {
-			c.logger.WithFields(logrus.Fields{
+			c.log.WithFields(logrus.Fields{
 				"server": server.UUID,
 			}).Logger.Error("Failed to create condition")
 		}
@@ -33,12 +30,8 @@ func (c *Client) CreateConditionInventoryForAllServers() error {
 	return nil
 }
 
-func (c *Client) GatherServersNonBlocking(pageSize int) (chan fleetDBapi.Server, *semaphore.Weighted, error) {
-	if c.fdbClient == nil {
-		return nil, nil, ErrSsClientIsNil
-	}
-
-	serverCh := make(chan fleetDBapi.Server)
+func (c *Client) GatherServersNonBlocking(pageSize int) (chan *fleetDBApi.Server, *semaphore.Weighted, error) {
+	serverCh := make(chan *fleetDBApi.Server)
 	concLimiter := semaphore.NewWeighted(int64(pageSize * pageSize))
 
 	go func() {

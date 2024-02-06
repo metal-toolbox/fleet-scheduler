@@ -4,7 +4,7 @@ Fleet-Scheduler is a collection of tasks that can each be set up as jobs in orde
 
 A **task** is a set of functions that are executed in order to make changes to fleet services.
 
-A **job** is a task that is set up to be executed on a schedule.
+A **job** is a task that is set up to be executed on a schedule through a [k8s cronjob](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/).
 
 ## Standalone Usage
 

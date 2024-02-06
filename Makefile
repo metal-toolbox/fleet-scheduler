@@ -16,11 +16,11 @@ PROJECT_NAME := fleet-scheduler
 
 ## Go test
 test:
-	CGO_ENABLED=0 go test  -covermode=atomic ./...
+	go test  -covermode=atomic ./...
 
 ## golangci-lint
 lint:
-	golangci-lint run --config .golangci.yml --timeout 300s
+	golangci-lint run --config .golangci.yaml --timeout 300s
 
 ## Go mod
 go-mod:
@@ -28,43 +28,42 @@ go-mod:
 
 ## build osx bin
 build-osx:
-ifeq ($(GO_VERSION), 0)
+ifeq (${GO_VERSION}, 0)
 	$(error build requies go version 1.20 or higher)
 endif
-	GOOS=darwin GOARCH=amd64 go build -o $(PROJECT_NAME) \
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o ${PROJECT_NAME} \
 		-ldflags \
-		"-X $(LDFLAG_LOCATION).GitCommit=$(GIT_COMMIT) \
-		-X $(LDFLAG_LOCATION).GitBranch=$(GIT_BRANCH) \
-		-X $(LDFLAG_LOCATION).GitSummary=$(GIT_SUMMARY) \
-		-X $(LDFLAG_LOCATION).Version=$(VERSION) \
-		-X $(LDFLAG_LOCATION).BuildDate=$(BUILD_DATE)"
+		"-X ${LDFLAG_LOCATION}.GitCommit=${GIT_COMMIT} \
+		-X ${LDFLAG_LOCATION}.GitBranch=${GIT_BRANCH} \
+		-X ${LDFLAG_LOCATION}.GitSummary=${GIT_SUMMARY} \
+		-X ${LDFLAG_LOCATION}.Version=${VERSION} \
+		-X ${LDFLAG_LOCATION}.BuildDate=${BUILD_DATE}"
 
 ## Build linux bin
 build-linux:
-ifeq ($(GO_VERSION), 0)
+ifeq (${GO_VERSION}, 0)
 	$(error build requies go version 1.20 or higher)
 endif
-	GOOS=linux GOARCH=amd64 go build -o $(PROJECT_NAME) \
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ${PROJECT_NAME} \
 		-ldflags \
-		"-X $(LDFLAG_LOCATION).GitCommit=$(GIT_COMMIT) \
-		-X $(LDFLAG_LOCATION).GitBranch=$(GIT_BRANCH) \
-		-X $(LDFLAG_LOCATION).GitSummary=$(GIT_SUMMARY) \
-		-X $(LDFLAG_LOCATION).Version=$(VERSION) \
-		-X $(LDFLAG_LOCATION).BuildDate=$(BUILD_DATE)"
+		"-X ${LDFLAG_LOCATION}.GitCommit=${GIT_COMMIT} \
+		-X ${LDFLAG_LOCATION}.GitBranch=${GIT_BRANCH} \
+		-X ${LDFLAG_LOCATION}.GitSummary=${GIT_SUMMARY} \
+		-X ${LDFLAG_LOCATION}.Version=${VERSION} \
+		-X ${LDFLAG_LOCATION}.BuildDate=${BUILD_DATE}"
 
-## build docker image and tag as ghcr.io/metal-toolbox/fleet-scheduler:latest
+## build docker image and tag as ${DOCKER_IMAGE}:latest
 build-image: build-linux
-	@echo ">>>> NOTE: You may want to execute 'make build-image-nocache' depending on the Docker stages changed"
-	docker build --rm=true -f Dockerfile -t ${DOCKER_IMAGE}:latest  . \
-							 --label org.label-schema.schema-version=1.0 \
-							 --label org.label-schema.vcs-ref=$(GIT_COMMIT_FULL) \
-							 --label org.label-schema.vcs-url=$(REPO)
+	docker build --rm=true -f Dockerfile -t ${DOCKER_IMAGE}:latest . \
+		--label org.label-schema.schema-version=1.0 \
+		--label org.label-schema.vcs-ref=${GIT_COMMIT_FULL} \
+		--label org.label-schema.vcs-url=${REPO}
 
 ## push devel docker image
 push-image-devel: build-image
-	docker tag ${DOCKER_IMAGE}:latest localhost:5001/$(PROJECT_NAME):latest
-	docker push localhost:5001/$(PROJECT_NAME):latest
-	kind load docker-image localhost:5001/$(PROJECT_NAME):latest
+	docker tag ${DOCKER_IMAGE}:latest localhost:5001/${PROJECT_NAME}:latest
+	docker push localhost:5001/${PROJECT_NAME}:latest
+	kind load docker-image localhost:5001/${PROJECT_NAME}:latest
 
 ## push docker image
 push-image:
@@ -78,6 +77,7 @@ WHITE  := $(shell tput -Txterm setaf 7)
 RESET  := $(shell tput -Txterm sgr0)
 
 TARGET_MAX_CHAR_NUM=20
+
 ## Show help
 help:
 	@echo ''
@@ -90,7 +90,7 @@ help:
 		if (helpMessage) { \
 			helpCommand = substr($$1, 0, index($$1, ":")-1); \
 			helpMessage = substr(lastLine, RSTART + 3, RLENGTH); \
-			printf "  ${YELLOW}%-$(TARGET_MAX_CHAR_NUM)s${RESET} ${GREEN}%s${RESET}\n", helpCommand, helpMessage; \
+			printf "  ${YELLOW}%-${TARGET_MAX_CHAR_NUM}s${RESET} ${GREEN}%s${RESET}\n", helpCommand, helpMessage; \
 		} \
 	} \
-	{ lastLine = $$0 }' $(MAKEFILE_LIST)
+	{ lastLine = $$0 }' ${MAKEFILE_LIST}

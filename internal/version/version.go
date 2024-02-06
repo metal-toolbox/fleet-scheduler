@@ -50,7 +50,7 @@ func ExportBuildInfoMetric() {
 			Name: "fleet-scheduler_build_info",
 			Help: "A metric with a constant '1' value, labeled by branch, commit, summary, builddate, version, goversion from which Fleet Scheduler was built.",
 		},
-		[]string{"branch", "commit", "summary", "builddate", "version", "goversion", "ironlibversion", "serverserviceVersion"},
+		[]string{"branch", "commit", "summary", "builddate", "version", "goversion", "conditionorcVersion", "serverserviceVersion"},
 	)
 
 	buildInfo.WithLabelValues(GitBranch, GitCommit, GitSummary, BuildDate, AppVersion, GoVersion, ConditionorcVersion, ServerserviceVersion).Set(1)

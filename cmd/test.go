@@ -8,14 +8,16 @@ import (
 	"github.com/equinix-labs/otel-init-go/otelinit"
 	"github.com/metal-toolbox/fleet-scheduler/internal/app"
 	"github.com/metal-toolbox/fleet-scheduler/internal/client"
+	"github.com/metal-toolbox/fleet-scheduler/internal/version"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/context"
 )
 
 var cmdTest = &cobra.Command{
-	Use:   "test",
-	Short: "test",
+	Use:     "test",
+	Short:   "test",
+	Version: version.Current().String(),
 	Run: func(cmd *cobra.Command, args []string) {
 		err := test(cmd.Context())
 		if err != nil {
@@ -46,6 +48,12 @@ func test(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	v := version.Current()
+	logger.WithFields(logrus.Fields{
+		"GitCommit":  v.GitCommit,
+		"AppVersion": v.AppVersion,
+	}).Info("running task: test")
 
 	// Just used to verify fleet-scheduler can authenticate
 	_, err = client.New(otelCtxWithCancel, cfg, logger)

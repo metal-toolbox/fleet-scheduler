@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/metal-toolbox/fleet-scheduler/internal/version"
 	"github.com/spf13/cobra"
 )
 
 var cfgFile string
 
 var rootCmd = &cobra.Command{
-	Use:   "fleet-scheduler",
-	Short: "execute commands to manage the fleet",
-
-	DisableAutoGenTag: true,
+	Use:     "fleet-scheduler",
+	Short:   "execute commands to manage the fleet",
+	Version: version.Current().String(),
 }
 
 func Execute() {

@@ -1,12 +1,10 @@
 package version
 
 import (
+	"fmt"
 	"runtime"
 	rdebug "runtime/debug"
 	"strings"
-
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 var (
@@ -31,8 +29,8 @@ type Version struct {
 	ConditionorcVersion  string `json:"conditionorc_version"`
 }
 
-func Current() Version {
-	return Version{
+func Current() *Version {
+	return &Version{
 		GitBranch:            GitBranch,
 		GitCommit:            GitCommit,
 		GitSummary:           GitSummary,
@@ -44,16 +42,8 @@ func Current() Version {
 	}
 }
 
-func ExportBuildInfoMetric() {
-	buildInfo := promauto.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "fleet-scheduler_build_info",
-			Help: "A metric with a constant '1' value, labeled by branch, commit, summary, builddate, version, goversion from which Fleet Scheduler was built.",
-		},
-		[]string{"branch", "commit", "summary", "builddate", "version", "goversion", "conditionorcVersion", "serverserviceVersion"},
-	)
-
-	buildInfo.WithLabelValues(GitBranch, GitCommit, GitSummary, BuildDate, AppVersion, GoVersion, ConditionorcVersion, ServerserviceVersion).Set(1)
+func (v *Version) String() string {
+	return fmt.Sprintf("version=%s ref=%s branch=%s built=%s", v.AppVersion, v.GitCommit, v.GitBranch, v.BuildDate)
 }
 
 func serverserviceVersion() string {

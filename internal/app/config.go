@@ -54,11 +54,6 @@ type ConfigOIDC struct {
 
 func LoadConfig(path string) (*Configuration, error) {
 	cfg := &Configuration{}
-	v := viper.New()
-	v.SetEnvPrefix(appName)
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	v.AutomaticEnv()
-
 	h, err := openConfig(path)
 	if err != nil {
 		return cfg, err
@@ -77,11 +72,6 @@ func LoadConfig(path string) (*Configuration, error) {
 		return cfg, err
 	}
 
-	err = loadEnvOverrides(cfg, v)
-	if err != nil {
-		return cfg, err
-	}
-
 	err = validateClientParams(cfg)
 	if err != nil {
 		return nil, err
@@ -91,14 +81,18 @@ func LoadConfig(path string) (*Configuration, error) {
 }
 
 func loadEnvOverrides(cfg *Configuration, v *viper.Viper) error {
-	cfg.FdbCfg.ClientSecret = v.GetString("fleetdb.oidc.client.secret")
-	if cfg.FdbCfg.ClientSecret == "" {
-		return errors.New("FLEET_SCHEDULER_FLEETDB_OIDC_CLIENT_SECRET was empty")
+	if !cfg.FdbCfg.DisableOAuth {
+		cfg.FdbCfg.ClientSecret = v.GetString("fleetdb.oidc.client.secret")
+		if cfg.FdbCfg.ClientSecret == "" {
+			return errors.New("FLEET_SCHEDULER_FLEETDB_OIDC_CLIENT_SECRET was empty")
+		}
 	}
 
-	cfg.CoCfg.ClientSecret = v.GetString("conditionorc.oidc.client.secret")
-	if cfg.FdbCfg.ClientSecret == "" {
-		return errors.New("FLEET_SCHEDULER_CONDITIONORC_OIDC_CLIENT_SECRET was empty")
+	if !cfg.CoCfg.DisableOAuth {
+		cfg.CoCfg.ClientSecret = v.GetString("conditionorc.oidc.client.secret")
+		if cfg.FdbCfg.ClientSecret == "" {
+			return errors.New("FLEET_SCHEDULER_CONDITIONORC_OIDC_CLIENT_SECRET was empty")
+		}
 	}
 
 	return nil
@@ -129,6 +123,15 @@ func validateClientParams(cfg *Configuration) error {
 		return err
 	}
 	err = validateOIDCConfig(cfg.CoCfg, defaultConditionOrcClientID)
+	if err != nil {
+		return err
+	}
+
+	v := viper.New()
+	v.SetEnvPrefix(appName)
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	v.AutomaticEnv()
+	err = loadEnvOverrides(cfg, v)
 	if err != nil {
 		return err
 	}

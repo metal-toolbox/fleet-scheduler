@@ -6,11 +6,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/semaphore"
 
+	fleetdbapi "github.com/metal-toolbox/fleetdb/pkg/api/v1"
 	fleetDBRivets "github.com/metal-toolbox/rivets/serverservice"
-	fleetDBApi "go.hollow.sh/serverservice/pkg/api/v1"
 )
 
-func (c *Client) gatherServers(pageSize int, serverCh chan *fleetDBApi.Server, concLimiter *semaphore.Weighted) {
+func (c *Client) gatherServers(pageSize int, serverCh chan *fleetdbapi.Server, concLimiter *semaphore.Weighted) {
 	// signal to receiver that we are done
 	defer close(serverCh)
 
@@ -72,15 +72,15 @@ func (c *Client) gatherServers(pageSize int, serverCh chan *fleetDBApi.Server, c
 	}
 }
 
-func (c *Client) getServerPage(pageSize, page int) ([]fleetDBApi.Server, *fleetDBApi.ServerResponse, error) {
-	params := &fleetDBApi.ServerListParams{
+func (c *Client) getServerPage(pageSize, page int) ([]fleetdbapi.Server, *fleetdbapi.ServerResponse, error) {
+	params := &fleetdbapi.ServerListParams{
 		FacilityCode: c.cfg.FacilityCode,
-		AttributeListParams: []fleetDBApi.AttributeListParams{
+		AttributeListParams: []fleetdbapi.AttributeListParams{
 			{
 				Namespace: fleetDBRivets.ServerAttributeNSBmcAddress,
 			},
 		},
-		PaginationParams: &fleetDBApi.PaginationParams{
+		PaginationParams: &fleetdbapi.PaginationParams{
 			Limit: pageSize,
 			Page:  page,
 		},

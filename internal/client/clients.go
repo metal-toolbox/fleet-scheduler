@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	conditionOrcApi "github.com/metal-toolbox/conditionorc/pkg/api/v1/client"
 	"github.com/metal-toolbox/fleet-scheduler/internal/app"
+	fleetdbapi "github.com/metal-toolbox/fleetdb/pkg/api/v1"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	fleetDBApi "go.hollow.sh/serverservice/pkg/api/v1"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -21,7 +21,7 @@ import (
 const timeout = 30 * time.Second
 
 type Client struct {
-	fdbClient *fleetDBApi.Client
+	fdbClient *fleetdbapi.Client
 	coClient  *conditionOrcApi.Client
 	cfg       *app.Configuration
 	log       *logrus.Logger
@@ -67,7 +67,7 @@ func (c *Client) newFleetDBClient() error {
 		}
 	}
 
-	c.fdbClient, err = fleetDBApi.NewClientWithToken(
+	c.fdbClient, err = fleetdbapi.NewClientWithToken(
 		secret,
 		c.cfg.FdbCfg.Endpoint,
 		client,
@@ -116,6 +116,7 @@ func (c *Client) setUpClientWithoutOAuth(logHookFunc func(l retryablehttp.Logger
 	// set up client
 	retryableClient := retryablehttp.NewClient()
 	retryableClient.HTTPClient = otelhttp.DefaultClient // use otel client so we can collect telemetry
+
 	// log hook fo 500 errors since the the retryablehttp client masks them
 	retryableClient.ResponseLogHook = logHookFunc
 
@@ -169,10 +170,9 @@ func logHookFunc(l retryablehttp.Logger, r *http.Response) {
 	// retryablehttp ignores 500 and all errors above 501. So we want to make sure those are logged.
 	// https://github.com/hashicorp/go-retryablehttp/blob/4165cf8897205a879a06b20d1ed0a2a76fbb6a17/client.go#L521C80-L521C100
 	if r.StatusCode == http.StatusInternalServerError || r.StatusCode > http.StatusNotImplemented {
-		// named newErr so the linter doesnt get mad
-		b, newErr := io.ReadAll(r.Body)
-		if newErr != nil {
-			l.Printf("query returned 500 error, got error reading body: %s", newErr.Error())
+		b, err := io.ReadAll(r.Body)
+		if err != nil {
+			l.Printf("query returned 500 error, got error reading body: %s", err.Error())
 			return
 		}
 

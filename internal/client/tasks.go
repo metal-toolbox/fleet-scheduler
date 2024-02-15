@@ -5,7 +5,7 @@ import (
 	"golang.org/x/sync/semaphore"
 
 	// "github.com/sirupsen/logrus"
-	fleetDBApi "go.hollow.sh/serverservice/pkg/api/v1"
+	fleetdbapi "github.com/metal-toolbox/fleetdb/pkg/api/v1"
 )
 
 func (c *Client) CreateConditionInventoryForAllServers() error {
@@ -30,8 +30,8 @@ func (c *Client) CreateConditionInventoryForAllServers() error {
 	return nil
 }
 
-func (c *Client) GatherServersNonBlocking(pageSize int) (chan *fleetDBApi.Server, *semaphore.Weighted, error) {
-	serverCh := make(chan *fleetDBApi.Server)
+func (c *Client) GatherServersNonBlocking(pageSize int) (chan *fleetdbapi.Server, *semaphore.Weighted, error) {
+	serverCh := make(chan *fleetdbapi.Server)
 	concLimiter := semaphore.NewWeighted(int64(pageSize * pageSize))
 
 	go func() {

@@ -18,7 +18,7 @@ var cmdTest = &cobra.Command{
 	Use:     "test",
 	Short:   "test",
 	Version: version.Current().String(),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		err := test(cmd.Context())
 		if err != nil {
 			log.Fatal(err)
@@ -62,8 +62,8 @@ func test(ctx context.Context) error {
 	}
 
 	// purge secrets from config before printing the config (for debug purposes)
-	cfg.FdbCfg.ClientSecret = ""
-	cfg.CoCfg.ClientSecret = ""
+	cfg.FdbCfg.ClientSecret = "REDACTED"
+	cfg.CoCfg.ClientSecret = "REDACTED"
 
 	var prettyJSON bytes.Buffer
 	myJSON, err := json.Marshal(cfg)

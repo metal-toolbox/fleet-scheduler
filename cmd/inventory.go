@@ -16,7 +16,7 @@ var cmdInventory = &cobra.Command{
 	Use:     "inventory",
 	Short:   "gather all servers and create invetory for them",
 	Version: version.Current().String(),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		err := inventory(cmd.Context())
 		if err != nil {
 			log.Fatal(err)

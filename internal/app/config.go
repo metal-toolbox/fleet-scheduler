@@ -3,6 +3,7 @@ package app
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/adrg/xdg"
 	"github.com/pkg/errors"
@@ -10,11 +11,14 @@ import (
 )
 
 const (
-	config_env_variable_name = "FLEET_SCHEDULER_CONFIG"
+	appName string = "fleet-scheduler"
 
-	LogLevelInfo = "info"
-	LogLevelDebug = "debug"
-	LogLevelTrace = "trace"
+	defaultFleetDBClientID      = "fleetscheduler-serverservice-api"
+	defaultConditionOrcClientID = "fleetscheduler-condition-api"
+
+	defaultConcurrencyCount = 4
+
+	configEnvVariableName = "FLEET_SCHEDULER_CONFIG"
 )
 
 type Configuration struct {
@@ -22,19 +26,20 @@ type Configuration struct {
 	// one of - info, debug, trace
 	LogLevel string `mapstructure:"log_level"`
 
-	// CSV file path when StoreKind is set to csv.
-	CsvFile string `mapstructure:"csv_file"`
-
-	// FacilityCode limits this alloy to events in a facility.
+	// FacilityCode limits this fleet scheduler to events in a facility.
 	FacilityCode string `mapstructure:"facility_code"`
 
-	// FleetDBConfig defines the fleetdb (serverservice) client configuration parameters
+	// Max threads allowed for communicating with other resources.
+	Concurrency int `mapstructure:"concurrency"`
+
+	// Defines the fleetdb (serverservice) client configuration parameters
 	FdbCfg *ConfigOIDC `mapstructure:"fleetdb_api"`
+	// Defines the condition orchestrator client configuration parameters
 	CoCfg *ConfigOIDC `mapstructure:"conditionorc_api"`
 }
 
 type ConfigOIDC struct {
-	// Disable skips OAuth setup
+	// Skips OAuth setup if true
 	DisableOAuth bool `mapstructure:"disable_oauth"`
 
 	// ServerService OAuth2 parameters
@@ -47,9 +52,8 @@ type ConfigOIDC struct {
 	ClientSecret     string   `mapstructure:"oidc_client_secret"`
 }
 
-func loadConfig(path string) (*Configuration, error) {
+func LoadConfig(path string) (*Configuration, error) {
 	cfg := &Configuration{}
-	viper.AutomaticEnv()
 	h, err := openConfig(path)
 	if err != nil {
 		return cfg, err
@@ -76,34 +80,58 @@ func loadConfig(path string) (*Configuration, error) {
 	return cfg, nil
 }
 
-func validateClientParams(cfg *Configuration) error {
-	errCfgInvalid := errors.New("Configuration is invalid")
+func loadEnvOverrides(cfg *Configuration, v *viper.Viper) error {
+	if !cfg.FdbCfg.DisableOAuth {
+		cfg.FdbCfg.ClientSecret = v.GetString("fleetdb.oidc.client.secret")
+		if cfg.FdbCfg.ClientSecret == "" {
+			return errors.New("FLEET_SCHEDULER_FLEETDB_OIDC_CLIENT_SECRET was empty")
+		}
+	}
 
+	if !cfg.CoCfg.DisableOAuth {
+		cfg.CoCfg.ClientSecret = v.GetString("conditionorc.oidc.client.secret")
+		if cfg.FdbCfg.ClientSecret == "" {
+			return errors.New("FLEET_SCHEDULER_CONDITIONORC_OIDC_CLIENT_SECRET was empty")
+		}
+	}
+
+	return nil
+}
+
+func validateClientParams(cfg *Configuration) error {
 	if cfg.LogLevel == "" {
-		cfg.LogLevel = LogLevelInfo
-	} else {
-		if cfg.LogLevel != LogLevelInfo &&
-			cfg.LogLevel != LogLevelDebug &&
-			cfg.LogLevel != LogLevelTrace {
-				return errors.Wrap(errCfgInvalid, "LogLevel")
-			}
+		cfg.LogLevel = "debug"
+	}
+
+	if cfg.Concurrency <= 0 {
+		cfg.Concurrency = defaultConcurrencyCount
 	}
 
 	// FleetDB (serverservice) Configuration
 	if cfg.FdbCfg == nil {
-		return errors.Wrap(errCfgInvalid, "fleetdb_api entry doesnt exist")
+		return errors.Wrap(ErrInvalidConfig, "fleetdb_api entry doesnt exist")
 	}
 	if cfg.CoCfg == nil {
-		return errors.Wrap(errCfgInvalid, "conditionorc_api entry doesnt exist")
+		return errors.Wrap(ErrInvalidConfig, "conditionorc_api entry doesnt exist")
 	}
 	if cfg.FacilityCode == "" {
-		return errors.Wrap(errCfgInvalid, "Facility Code")
+		return errors.Wrap(ErrInvalidConfig, "Facility Code")
 	}
-	err := validateOIDCConfig(cfg.FdbCfg, errors.Wrap(errCfgInvalid, "fleetdb_api is invalid"))
+
+	err := validateOIDCConfig(cfg.FdbCfg, defaultFleetDBClientID)
 	if err != nil {
 		return err
 	}
-	err = validateOIDCConfig(cfg.CoCfg, errors.Wrap(errCfgInvalid, "conditionorc_api is invalid"))
+	err = validateOIDCConfig(cfg.CoCfg, defaultConditionOrcClientID)
+	if err != nil {
+		return err
+	}
+
+	v := viper.New()
+	v.SetEnvPrefix(appName)
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	v.AutomaticEnv()
+	err = loadEnvOverrides(cfg, v)
 	if err != nil {
 		return err
 	}
@@ -111,15 +139,17 @@ func validateClientParams(cfg *Configuration) error {
 	return nil
 }
 
-func validateOIDCConfig(cfg* ConfigOIDC, err error) error {
+func validateOIDCConfig(cfg *ConfigOIDC, defaultClientID string) error {
+	if cfg.ClientID == "" {
+		cfg.ClientID = defaultClientID
+	}
+	err := errors.Wrap(ErrInvalidConfig, cfg.ClientID)
+
 	if cfg.Endpoint == "" {
 		return errors.Wrap(err, "endpoint")
 	}
 
 	if !cfg.DisableOAuth {
-		if cfg.ClientID == "" {
-			return errors.Wrap(err, "oidc_client_id")
-		}
 		if cfg.IssuerEndpoint == "" {
 			return errors.Wrap(err, "oidc_issuer_endpoint")
 		}
@@ -144,7 +174,7 @@ func openConfig(path string) (*os.File, error) {
 	if path != "" {
 		return os.Open(path)
 	}
-	path = viper.GetString(config_env_variable_name)
+	path = viper.GetString(configEnvVariableName)
 	if path != "" {
 		return os.Open(path)
 	}

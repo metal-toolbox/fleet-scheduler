@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
 	"log"
 
 	"github.com/equinix-labs/otel-init-go/otelinit"
@@ -12,12 +14,12 @@ import (
 	"golang.org/x/net/context"
 )
 
-var cmdInventory = &cobra.Command{
-	Use:     "inventory",
-	Short:   "gather all servers and create invetory for them",
+var cmdTest = &cobra.Command{
+	Use:     "test",
+	Short:   "test",
 	Version: version.Current().String(),
 	Run: func(cmd *cobra.Command, _ []string) {
-		err := inventory(cmd.Context())
+		err := test(cmd.Context())
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -25,10 +27,11 @@ var cmdInventory = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(cmdInventory)
+	rootCmd.AddCommand(cmdTest)
 }
 
-func inventory(ctx context.Context) error {
+// This test command will be purged once I verify everything is functional
+func test(ctx context.Context) error {
 	otelCtx, otelShutdown := otelinit.InitOpenTelemetry(ctx, "fleet-scheduler")
 	defer otelShutdown(ctx)
 
@@ -48,23 +51,32 @@ func inventory(ctx context.Context) error {
 
 	v := version.Current()
 	logger.WithFields(logrus.Fields{
-		"GitCommit":             v.GitCommit,
-		"AppVersion":            v.AppVersion,
-		"ServerServiceVersion:": v.ServerserviceVersion, // TODO; Swap out with fleetdb once migrated to fleetdb
-		"ConditionOrcVersion:":  v.ConditionorcVersion,
-	}).Info("running task: inventory")
+		"GitCommit":  v.GitCommit,
+		"AppVersion": v.AppVersion,
+	}).Info("running task: test")
 
-	newClient, err := client.New(otelCtxWithCancel, cfg, logger)
+	// Just used to verify fleet-scheduler can authenticate
+	_, err = client.New(otelCtxWithCancel, cfg, logger)
 	if err != nil {
 		return err
 	}
 
-	err = newClient.CreateConditionInventoryForAllServers()
+	// purge secrets from config before printing the config (for debug purposes)
+	cfg.FdbCfg.ClientSecret = "REDACTED"
+	cfg.CoCfg.ClientSecret = "REDACTED"
+
+	var prettyJSON bytes.Buffer
+	myJSON, err := json.Marshal(cfg)
 	if err != nil {
 		return err
 	}
 
-	logger.Info("Task: 'CreateConditionInventoryForAllServers' complete")
+	err = json.Indent(&prettyJSON, myJSON, "", "\t")
+	if err != nil {
+		return err
+	}
+
+	logger.Info("Config: ", prettyJSON.String())
 
 	return nil
 }

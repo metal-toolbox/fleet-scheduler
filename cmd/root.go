@@ -4,19 +4,16 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/metal-toolbox/fleet-scheduler/internal/version"
 	"github.com/spf13/cobra"
 )
 
-var (
-	cfgFile string
-	reAuth  bool
-)
+var cfgFile string
 
 var rootCmd = &cobra.Command{
-	Use:   "fleet-scheduler",
-	Short: "execute commands to manage the fleet",
-
-	DisableAutoGenTag: true,
+	Use:     "fleet-scheduler",
+	Short:   "execute commands to manage the fleet",
+	Version: version.Current().String(),
 }
 
 func Execute() {
@@ -28,6 +25,5 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $XDG_CONFIG_HOME/mctl/config.yml)")
-	rootCmd.PersistentFlags().BoolVar(&reAuth, "reauth", false, "re-authenticate with oauth services")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "set config file path. Default location is in the env variable FLEET_SCHEDULER_CONFIG")
 }

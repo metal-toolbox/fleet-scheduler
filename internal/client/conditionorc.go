@@ -19,8 +19,7 @@ func (c *Client) CreateConditionInventory(serverUUID uuid.UUID) error {
 		return err
 	}
 
-	conditionCreate := conditionOrcapi.ConditionCreate {
-		Exclusive: false,
+	conditionCreate := conditionOrcapi.ConditionCreate{
 		Parameters: params,
 	}
 

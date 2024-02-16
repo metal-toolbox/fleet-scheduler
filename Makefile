@@ -1,27 +1,73 @@
+export DOCKER_BUILDKIT=1
+LDFLAG_LOCATION := github.com/metal-toolbox/fleet-scheduler/internal/version
+GIT_COMMIT  := $(shell git rev-parse --short HEAD)
+GIT_BRANCH  := $(shell git symbolic-ref -q --short HEAD)
+GIT_SUMMARY := $(shell git describe --tags --dirty --always)
+VERSION     := $(shell git describe --tags 2> /dev/null)
+BUILD_DATE  := $(shell date +%s)
+GIT_COMMIT_FULL  := $(shell git rev-parse HEAD)
+GO_VERSION := $(shell expr `go version |cut -d ' ' -f3 |cut -d. -f2` \>= 20)
+DOCKER_IMAGE  := "ghcr.io/metal-toolbox/fleet-scheduler"
+REPO := "https://github.com/metal-toolbox/fleet-scheduler.git"
+
 .DEFAULT_GOAL := help
+
+PROJECT_NAME := fleet-scheduler
 
 ## Go test
 test:
-	CGO_ENABLED=0 go test  -covermode=atomic ./...
+	go test  -covermode=atomic ./...
 
 ## golangci-lint
 lint:
-	golangci-lint run --config .golangci.yml --timeout 300s
+	golangci-lint run --config .golangci.yaml --timeout 300s
 
 ## Go mod
 go-mod:
-	go mod tidy -compat=1.19 && go mod vendor
+	go mod tidy -compat=1.20 && go mod vendor
 
-## Build osx bin
-build-osx: go-mod
-	GOOS=darwin GOARCH=amd64 go build -o fleet-scheduler -mod vendor
-	sha256sum fleet-scheduler > fleet-scheduler_checksum.txt
+## build osx bin
+build-osx:
+ifeq (${GO_VERSION}, 0)
+	$(error build requies go version 1.20 or higher)
+endif
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o ${PROJECT_NAME} \
+		-ldflags \
+		"-X ${LDFLAG_LOCATION}.GitCommit=${GIT_COMMIT} \
+		-X ${LDFLAG_LOCATION}.GitBranch=${GIT_BRANCH} \
+		-X ${LDFLAG_LOCATION}.GitSummary=${GIT_SUMMARY} \
+		-X ${LDFLAG_LOCATION}.Version=${VERSION} \
+		-X ${LDFLAG_LOCATION}.BuildDate=${BUILD_DATE}"
 
 ## Build linux bin
-build-linux: go-mod
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o fleet-scheduler -mod vendor
-	sha256sum fleet-scheduler > fleet-scheduler_checksum.txt
+build-linux:
+ifeq (${GO_VERSION}, 0)
+	$(error build requies go version 1.20 or higher)
+endif
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ${PROJECT_NAME} \
+		-ldflags \
+		"-X ${LDFLAG_LOCATION}.GitCommit=${GIT_COMMIT} \
+		-X ${LDFLAG_LOCATION}.GitBranch=${GIT_BRANCH} \
+		-X ${LDFLAG_LOCATION}.GitSummary=${GIT_SUMMARY} \
+		-X ${LDFLAG_LOCATION}.Version=${VERSION} \
+		-X ${LDFLAG_LOCATION}.BuildDate=${BUILD_DATE}"
 
+## build docker image and tag as ${DOCKER_IMAGE}:latest
+build-image: build-linux
+	docker build --rm=true -f Dockerfile -t ${DOCKER_IMAGE}:latest . \
+		--label org.label-schema.schema-version=1.0 \
+		--label org.label-schema.vcs-ref=${GIT_COMMIT_FULL} \
+		--label org.label-schema.vcs-url=${REPO}
+
+## push devel docker image
+push-image-devel: build-image
+	docker tag ${DOCKER_IMAGE}:latest localhost:5001/${PROJECT_NAME}:latest
+	docker push localhost:5001/${PROJECT_NAME}:latest
+	kind load docker-image localhost:5001/${PROJECT_NAME}:latest
+
+## push docker image
+push-image:
+	docker push ${DOCKER_IMAGE}:latest
 
 # https://gist.github.com/prwhite/8168133
 # COLORS
@@ -30,8 +76,8 @@ YELLOW := $(shell tput -Txterm setaf 3)
 WHITE  := $(shell tput -Txterm setaf 7)
 RESET  := $(shell tput -Txterm sgr0)
 
-
 TARGET_MAX_CHAR_NUM=20
+
 ## Show help
 help:
 	@echo ''
@@ -44,7 +90,7 @@ help:
 		if (helpMessage) { \
 			helpCommand = substr($$1, 0, index($$1, ":")-1); \
 			helpMessage = substr(lastLine, RSTART + 3, RLENGTH); \
-			printf "  ${YELLOW}%-$(TARGET_MAX_CHAR_NUM)s${RESET} ${GREEN}%s${RESET}\n", helpCommand, helpMessage; \
+			printf "  ${YELLOW}%-${TARGET_MAX_CHAR_NUM}s${RESET} ${GREEN}%s${RESET}\n", helpCommand, helpMessage; \
 		} \
 	} \
-	{ lastLine = $$0 }' $(MAKEFILE_LIST)
+	{ lastLine = $$0 }' ${MAKEFILE_LIST}

@@ -118,20 +118,20 @@ func validateClientParams(cfg *Configuration) error {
 		return errors.Wrap(ErrInvalidConfig, "Facility Code")
 	}
 
-	err := validateOIDCConfig(cfg.FdbCfg, defaultFleetDBClientID)
-	if err != nil {
-		return err
-	}
-	err = validateOIDCConfig(cfg.CoCfg, defaultConditionOrcClientID)
-	if err != nil {
-		return err
-	}
-
 	v := viper.New()
 	v.SetEnvPrefix(appName)
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
-	err = loadEnvOverrides(cfg, v)
+	err := loadEnvOverrides(cfg, v)
+	if err != nil {
+		return err
+	}
+
+	err = validateOIDCConfig(cfg.FdbCfg, defaultFleetDBClientID)
+	if err != nil {
+		return err
+	}
+	err = validateOIDCConfig(cfg.CoCfg, defaultConditionOrcClientID)
 	if err != nil {
 		return err
 	}

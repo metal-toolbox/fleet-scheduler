@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	appName string = "fleet-scheduler"
+	appName string = "fleet_scheduler"
 
 	defaultFleetDBClientID      = "fleetscheduler-serverservice-api"
 	defaultConditionOrcClientID = "fleetscheduler-condition-api"

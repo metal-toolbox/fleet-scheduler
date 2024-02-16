@@ -18,7 +18,7 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.48.0
 	golang.org/x/net v0.19.0
 	golang.org/x/oauth2 v0.15.0
-	golang.org/x/sync v0.5.0
+	golang.org/x/sync v0.6.0
 )
 
 require (

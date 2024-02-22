@@ -48,7 +48,6 @@ type ConfigOIDC struct {
 	IssuerEndpoint   string   `mapstructure:"oidc_issuer_endpoint"`
 	AudienceEndpoint string   `mapstructure:"oidc_audience_endpoint"`
 	ClientScopes     []string `mapstructure:"oidc_scopes"`
-	PkceCallbackURL  string   `mapstructure:"oidc_pkce_callback_url"`
 	ClientSecret     string   `mapstructure:"oidc_client_secret"`
 }
 
@@ -161,9 +160,6 @@ func validateOIDCConfig(cfg *ConfigOIDC, defaultClientID string) error {
 		}
 		if cfg.ClientSecret == "" {
 			return errors.Wrap(err, "oidc_client_secret")
-		}
-		if cfg.PkceCallbackURL == "" {
-			return errors.Wrap(err, "oidc_pkce_callback_url")
 		}
 	}
 

@@ -504,6 +504,8 @@ github.com/metal-toolbox/conditionorc v1.0.3 h1:HRmRL45sOimHR+SH+l03Q210vMV/2kQS
 github.com/metal-toolbox/conditionorc v1.0.3/go.mod h1:0SEoLbqOV7w1DyddKXGJVViGQ7kXgUft62Z5qzATlLw=
 github.com/metal-toolbox/fleetdb v0.16.9-0.20240214145248-f2a287db1df3 h1:WT0v85TbEfSLoxxnxXtHGXZKA/3OxJfOmOqCzM9zEkw=
 github.com/metal-toolbox/fleetdb v0.16.9-0.20240214145248-f2a287db1df3/go.mod h1:L2FavoKCdpewj759/MepRmbInSE0JpuSOMnXJho9u3o=
+github.com/metal-toolbox/fleetdb v0.16.9-0.20240222182014-d1ebd1b7ffd4 h1:3U1cReE/Vler7jjCeMKj4ej8mRjaxS6N5viwjFviTos=
+github.com/metal-toolbox/fleetdb v0.16.9-0.20240222182014-d1ebd1b7ffd4/go.mod h1:L2FavoKCdpewj759/MepRmbInSE0JpuSOMnXJho9u3o=
 github.com/metal-toolbox/rivets v0.2.2 h1:+PM1l+Ebpfioog4iqIZq13BLdcM7vP5Tq2OoaPQx0ts=
 github.com/metal-toolbox/rivets v0.2.2/go.mod h1:XYcHa0lsKG3jYKImcCfjtHkjTNewLGonzozOC5IcdKk=
 github.com/microsoft/go-mssqldb v0.17.0/go.mod h1:OkoNGhGEs8EZqchVTtochlXruEhEOaO4S0d2sB5aeGQ=

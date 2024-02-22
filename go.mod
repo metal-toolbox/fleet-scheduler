@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.4.0
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/metal-toolbox/conditionorc v1.0.3
-	github.com/metal-toolbox/fleetdb v0.16.9-0.20240214145248-f2a287db1df3
+	github.com/metal-toolbox/fleetdb v0.16.9-0.20240222182014-d1ebd1b7ffd4
 	github.com/metal-toolbox/rivets v0.2.2
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3

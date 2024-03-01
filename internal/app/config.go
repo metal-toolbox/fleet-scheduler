@@ -16,8 +16,6 @@ const (
 	defaultFleetDBClientID      = "fleetscheduler-serverservice-api"
 	defaultConditionOrcClientID = "fleetscheduler-condition-api"
 
-	defaultConcurrencyCount = 4
-
 	configEnvVariableName = "FLEET_SCHEDULER_CONFIG"
 )
 
@@ -28,9 +26,6 @@ type Configuration struct {
 
 	// FacilityCode limits this fleet scheduler to events in a facility.
 	FacilityCode string `mapstructure:"facility_code"`
-
-	// Max threads allowed for communicating with other resources.
-	Concurrency int `mapstructure:"concurrency"`
 
 	// Defines the fleetdb (serverservice) client configuration parameters
 	FdbCfg *ConfigOIDC `mapstructure:"fleetdb_api"`
@@ -100,10 +95,6 @@ func loadEnvOverrides(cfg *Configuration, v *viper.Viper) error {
 func validateClientParams(cfg *Configuration) error {
 	if cfg.LogLevel == "" {
 		cfg.LogLevel = "debug"
-	}
-
-	if cfg.Concurrency <= 0 {
-		cfg.Concurrency = defaultConcurrencyCount
 	}
 
 	// FleetDB (serverservice) Configuration

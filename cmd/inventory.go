@@ -12,6 +12,11 @@ import (
 	"golang.org/x/net/context"
 )
 
+var (
+	pageSize      int
+	inFlightPages int
+)
+
 var cmdInventory = &cobra.Command{
 	Use:     "inventory",
 	Short:   "gather all servers and create invetory for them",
@@ -25,6 +30,8 @@ var cmdInventory = &cobra.Command{
 }
 
 func init() {
+	rootCmd.PersistentFlags().IntVar(&pageSize, "page-size", 4, "Define how many servers to query per request")
+	rootCmd.PersistentFlags().IntVar(&inFlightPages, "inflight-pages", 1, "Define how many server pages to queue up before waiting for the previous to finish creating the condition")
 	rootCmd.AddCommand(cmdInventory)
 }
 
@@ -59,7 +66,7 @@ func inventory(ctx context.Context) error {
 		return err
 	}
 
-	err = newClient.CreateConditionInventoryForAllServers()
+	err = newClient.CreateConditionInventoryForAllServers(pageSize, inFlightPages)
 	if err != nil {
 		return err
 	}

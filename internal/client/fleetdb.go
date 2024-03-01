@@ -21,7 +21,7 @@ func (c *Client) gatherServers(pageSize int, serverCh chan *fleetdbapi.Server, c
 		c.log.WithFields(logrus.Fields{
 			"pageSize":  pageSize,
 			"pageIndex": 1,
-		}).Logger.Error("Failed to get list of servers")
+		}).Logger.Errorf("Failed to get list of servers: %s", err.Error())
 		return
 	}
 	totalPages := response.TotalPages
@@ -48,7 +48,7 @@ func (c *Client) gatherServers(pageSize int, serverCh chan *fleetdbapi.Server, c
 			c.log.WithFields(logrus.Fields{
 				"pageSize":  pageSize,
 				"pageIndex": i,
-			}).Logger.Error("Failed to get page of servers")
+			}).Logger.Errorf("Failed to get page of servers, attempting to continue: %s", err.Error())
 
 			continue
 		}
@@ -61,9 +61,13 @@ func (c *Client) gatherServers(pageSize int, serverCh chan *fleetdbapi.Server, c
 
 		// throttle this loop
 		// Doing a spinlock to prevent a permanent lock if the ctx gets canceled
-		// TODO; Kill thread if context is canceled?
 		for !concLimiter.TryAcquire(int64(response.PageSize)) && c.ctx.Err() == nil {
 			time.Sleep(time.Second)
+		}
+
+		if c.ctx.Err() != nil {
+			c.log.Warn("Context canceled, stopping server gathering")
+			return
 		}
 
 		for i := range servers {

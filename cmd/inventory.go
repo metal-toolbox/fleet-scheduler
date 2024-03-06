@@ -6,7 +6,9 @@ import (
 	"github.com/equinix-labs/otel-init-go/otelinit"
 	"github.com/metal-toolbox/fleet-scheduler/internal/app"
 	"github.com/metal-toolbox/fleet-scheduler/internal/client"
+	"github.com/metal-toolbox/fleet-scheduler/internal/metrics"
 	"github.com/metal-toolbox/fleet-scheduler/internal/version"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/context"
@@ -36,12 +38,6 @@ func init() {
 }
 
 func inventory(ctx context.Context) error {
-	otelCtx, otelShutdown := otelinit.InitOpenTelemetry(ctx, "fleet-scheduler")
-	defer otelShutdown(ctx)
-
-	otelCtxWithCancel, cancelFunc := context.WithCancel(otelCtx)
-	defer cancelFunc()
-
 	cfg, err := app.LoadConfig(cfgFile)
 	if err != nil {
 		return err
@@ -52,6 +48,19 @@ func inventory(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	metricsPusher := metrics.NewPusher(logger, "inventory")
+	metricsPusher.AddCollector(collectors.NewGoCollector())
+	err = metricsPusher.Start()
+	if err != nil {
+		return err
+	}
+
+	otelCtx, otelShutdown := otelinit.InitOpenTelemetry(ctx, "fleet-scheduler")
+	defer otelShutdown(ctx)
+
+	otelCtxWithCancel, cancelFunc := context.WithCancel(otelCtx)
+	defer cancelFunc()
 
 	v := version.Current()
 	logger.WithFields(logrus.Fields{
@@ -72,6 +81,8 @@ func inventory(ctx context.Context) error {
 	}
 
 	logger.Info("Task: 'CreateConditionInventoryForAllServers' complete")
+
+	metricsPusher.KillAndWait()
 
 	return nil
 }

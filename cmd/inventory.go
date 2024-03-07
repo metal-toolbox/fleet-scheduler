@@ -13,8 +13,7 @@ import (
 )
 
 var (
-	pageSize      int
-	inFlightPages int
+	pageSize int
 )
 
 var cmdInventory = &cobra.Command{
@@ -31,7 +30,6 @@ var cmdInventory = &cobra.Command{
 
 func init() {
 	rootCmd.PersistentFlags().IntVar(&pageSize, "page-size", 4, "Define how many servers to query per request")
-	rootCmd.PersistentFlags().IntVar(&inFlightPages, "inflight-pages", 1, "Define how many server pages to queue up before waiting for the previous to finish creating the condition")
 	rootCmd.AddCommand(cmdInventory)
 }
 
@@ -66,7 +64,7 @@ func inventory(ctx context.Context) error {
 		return err
 	}
 
-	err = newClient.CreateConditionInventoryForAllServers(pageSize, inFlightPages)
+	err = newClient.CreateConditionInventoryForAllServers(pageSize)
 	if err != nil {
 		return err
 	}

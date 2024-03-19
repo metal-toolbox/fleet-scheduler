@@ -37,7 +37,7 @@ func New(ctx context.Context, cfg *app.Configuration, log *logrus.Logger) (*Clie
 
 	err := client.newFleetDBClient()
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to initialize FleetDB Client (Serverservice)")
+		return nil, errors.Wrap(err, "Failed to initialize FleetDB Client")
 	}
 
 	err = client.newConditionOrcClient()

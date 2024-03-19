@@ -13,7 +13,7 @@ import (
 const (
 	appName string = "fleet_scheduler"
 
-	defaultFleetDBClientID      = "fleetscheduler-serverservice-api"
+	defaultFleetDBClientID      = "fleetscheduler-serverservice-api" // FleetDB still uses the ServerService Client ID
 	defaultConditionOrcClientID = "fleetscheduler-condition-api"
 
 	configEnvVariableName = "FLEET_SCHEDULER_CONFIG"
@@ -27,7 +27,7 @@ type Configuration struct {
 	// FacilityCode limits this fleet scheduler to events in a facility.
 	FacilityCode string `mapstructure:"facility_code"`
 
-	// Defines the fleetdb (serverservice) client configuration parameters
+	// Defines the fleetdb client configuration parameters
 	FdbCfg *ConfigOIDC `mapstructure:"fleetdb_api"`
 	// Defines the condition orchestrator client configuration parameters
 	CoCfg *ConfigOIDC `mapstructure:"conditionorc_api"`
@@ -37,7 +37,7 @@ type ConfigOIDC struct {
 	// Skips OAuth setup if true
 	DisableOAuth bool `mapstructure:"disable_oauth"`
 
-	// ServerService OAuth2 parameters
+	// OAuth2 parameters
 	Endpoint         string   `mapstructure:"endpoint"`
 	ClientID         string   `mapstructure:"oidc_client_id"`
 	IssuerEndpoint   string   `mapstructure:"oidc_issuer_endpoint"`
@@ -97,7 +97,7 @@ func validateClientParams(cfg *Configuration) error {
 		cfg.LogLevel = "debug"
 	}
 
-	// FleetDB (serverservice) Configuration
+	// FleetDB Configuration
 	if cfg.FdbCfg == nil {
 		return errors.Wrap(ErrInvalidConfig, "fleetdb_api entry doesnt exist")
 	}

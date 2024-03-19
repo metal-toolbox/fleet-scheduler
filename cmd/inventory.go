@@ -49,6 +49,8 @@ func inventory(ctx context.Context) error {
 
 	metricsPusher := metrics.NewPusher(logger, "inventory")
 	metricsPusher.AddCollector(collectors.NewGoCollector())
+	metricsPusher.AddCollector(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
+	metrics.AddCustomMetrics(metricsPusher)
 	err = metricsPusher.Start()
 	if err != nil {
 		return err
@@ -62,10 +64,10 @@ func inventory(ctx context.Context) error {
 
 	v := version.Current()
 	logger.WithFields(logrus.Fields{
-		"GitCommit":             v.GitCommit,
-		"AppVersion":            v.AppVersion,
-		"ServerServiceVersion:": v.ServerserviceVersion, // TODO; Swap out with fleetdb once migrated to fleetdb
-		"ConditionOrcVersion:":  v.ConditionorcVersion,
+		"GitCommit":            v.GitCommit,
+		"AppVersion":           v.AppVersion,
+		"FleetDBVersion:":      v.FleetDBVersion,
+		"ConditionOrcVersion:": v.ConditionorcVersion,
 	}).Info("running task: inventory")
 
 	newClient, err := client.New(otelCtxWithCancel, cfg, logger)

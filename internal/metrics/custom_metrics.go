@@ -14,7 +14,7 @@ func init() {
 		prometheus.CounterOpts{
 			Namespace: "fleet-scheduler",
 			Subsystem: "conditionorc",
-			Name:      "errors_total",
+			Name:      "fleet_scheduler_conditionorc_errors",
 			Help:      "a count of all errors attempting to reach conditionorc",
 		}, []string{
 			"errors",
@@ -25,7 +25,7 @@ func init() {
 		prometheus.CounterOpts{
 			Namespace: "fleet-scheduler",
 			Subsystem: "fleetdb",
-			Name:      "errors_total",
+			Name:      "fleet_scheduler_fleetdb_errors",
 			Help:      "a count of all errors attempting to reach fleetdb",
 		}, []string{
 			"errors",
@@ -36,7 +36,7 @@ func init() {
 		prometheus.CounterOpts{
 			Namespace: "fleet-scheduler",
 			Subsystem: "core",
-			Name:      "errors_total",
+			Name:      "fleet_scheduler_inventory_count",
 			Help:      "a count of all errors attempting to reach fleet-scheduler dependencies",
 		}, []string{},
 	)

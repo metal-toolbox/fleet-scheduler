@@ -1,0 +1,47 @@
+image:
+  pullPolicy: Always
+  repository:
+    tag: latest
+    url: localhost:5001
+env:
+  namespace: default
+  facility: sandbox
+  log_level: debug
+  endpoints:
+    fleetdb:
+      authenticate: true
+      url: http://fleetdb:8000
+      oidc_audience_url: # to be filled by parent helm chart if authenticate is true
+      oidc_issuer_url:   # to be filled by parent helm chart if authenticate is true
+      oidc_client_id: # to be filled by parent helm chart if authenticate is true
+      oidc_scopes:    # to be filled by parent helm chart if authenticate is true
+    conditionorc:
+      authenticate: true
+      url: http://conditionorc-api:9001
+      oidc_audience_url: # to be filled by parent helm chart if authenticate is true
+      oidc_issuer_url:   # to be filled by parent helm chart if authenticate is true
+      oidc_client_id: # to be filled by parent helm chart if authenticate is true
+      oidc_scopes:    # to be filled by parent helm chart if authenticate is true
+enable: true # can be entirely disabled by flipping this to false. It will still deploy, but it will not execute any tasks
+jobs:
+  - name: inventory # This job will collect all servers and create conditions on them within the facility
+    ttlSecondsAfterFinished: 86400 # Remove job after 1 day. (optional)
+    restartPolicy: Never
+    schedule: # Run every monday, starting at 12pm UTC, and randomly running over the next 6 hours
+      minute: "0"
+      hour: "12"
+      month: "*" # run every month
+      day_of_week: "1"
+      enable_random_minute: true # run randomly between all minutes between the range schedule.minute and (schedule.minute + schedule.random_minute_span)
+      random_minute_span: "58" # run anytime 59 minutes after the start minutes
+      enable_random_hour: true # run randomly between all hours between the range schedule.hour and (schedule.hour + schedule.random_hour_span)
+      random_hour_span: "6" # run anytime 6 hours after the start hour
+      enable_random_day_of_week: true # run randomly throughout the work week (monday through friday)
+      random_day_of_week_span: "5"
+    command:
+    - /usr/sbin/fleet-scheduler
+    - --config
+    - /etc/fleet-scheduler/config.yaml
+    - inventory
+    - --page-size # how many servers to get per request to fleetdb
+    - "100"

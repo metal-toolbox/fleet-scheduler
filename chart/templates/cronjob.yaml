@@ -1,0 +1,114 @@
+{{ if .Values.enable }}
+{{ range $job := .Values.jobs }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ $job.name }}
+  namespace: {{ $.Values.env.namespace }}
+  labels:
+    k8s-service: fleet-scheduler
+spec:
+  {{- with $job.deadline }}
+  startingDeadlineSeconds: {{ . }}
+  {{- end}}
+
+  # These "jitter" cronjob schedulers might be implemented properly within k8s in the future. If that happens we should look into using those instead.
+  # https://github.com/kubernetes/enhancements/blob/master/keps/sig-apps/19-Graduate-CronJob-to-Stable/README.md#support-jitter-for-cronjobs
+
+  {{ $minute := include "fleetscheduler.scheduleValueExists" (dict "job" $job "var" "minute" "default" 0) }}
+  {{ $hour := include "fleetscheduler.scheduleValueExists" (dict "job" $job "var" "hour" "default" 0) }}
+  {{ $month := include "fleetscheduler.scheduleValueExists" (dict "job" $job "var" "month" "default" 0) }}
+  {{ $day_of_week := include "fleetscheduler.scheduleValueExists" (dict "job" $job "var" "day_of_week" "default" 0) }}
+  {{ $enable_random_minute := include "fleetscheduler.scheduleValueExists" (dict "job" $job "var" "enable_random_minute" "default" "") }}
+  {{ $random_minute_span := include "fleetscheduler.scheduleValueExists" (dict "job" $job "var" "random_minute_span" "default" 0) }}
+  {{ $enable_random_hour := include "fleetscheduler.scheduleValueExists" (dict "job" $job "var" "enable_random_hour" "default" "") }}
+  {{ $random_hour_span := include "fleetscheduler.scheduleValueExists" (dict "job" $job "var" "random_hour_span" "default" 0) }}
+  {{ $enable_random_day_of_week := include "fleetscheduler.scheduleValueExists" (dict "job" $job "var" "enable_random_day_of_week" "default" "") }}
+  {{ $random_day_of_week_span := include "fleetscheduler.scheduleValueExists" (dict "job" $job "var" "random_day_of_week_span" "default" 0) }}
+
+  # Minutes
+  {{ $calculated_minute := include "fleetscheduler.calculate" (dict
+    "enable" $enable_random_minute
+    "type" "minute"
+    "limit" 59
+    "var" $minute
+    "span" $random_minute_span
+  )}}
+  # Hours
+  {{ $calculated_hour := include "fleetscheduler.calculate" (dict
+    "enable" $enable_random_hour
+    "type" "hour"
+    "limit" 23
+    "var" $hour
+    "span" $random_hour_span
+  )}}
+  # Days of the week
+  {{ $calculated_day_of_week := include "fleetscheduler.calculate" (dict
+    "enable" $enable_random_day_of_week
+    "type" "day_of_week"
+    "limit" 6
+    "var" $day_of_week
+    "span" $random_day_of_week_span
+  )}}
+
+  schedule: {{ printf "%s %s * %s %s" $calculated_minute $calculated_hour $job.schedule.month $calculated_day_of_week | quote }}
+
+  jobTemplate:
+    spec:
+      {{- with $job.ttl }}
+      ttlSecondsAfterFinished: {{ . }}
+      {{- end}}
+      template:
+        metadata:
+          labels:
+            k8s-app: fleet-scheduler
+        spec:
+          restartPolicy: {{ $job.restartPolicy }}
+          {{- if or $.Values.env.endpoints.fleetdb.authenticate $.Values.env.endpoints.conditionorc.authenticate }}
+          imagePullSecrets:
+            - name: fleet-scheduler-secrets
+          {{- end }}
+          volumes:
+            - name: config-volume
+              configMap:
+                name: fleet-scheduler-config
+          containers:
+          - name: {{ $job.name }}
+            image: {{ $.Values.image.repository.url }}/fleet-scheduler:{{ $.Values.image.repository.tag }}
+            imagePullPolicy: {{ $.Values.image.pullPolicy }}
+            {{- with $job.command }}
+            command:
+{{ toYaml . | indent 12 }}
+              {{- end }}
+            volumeMounts:
+              - name: config-volume
+                mountPath: /etc/fleet-scheduler
+                readOnly: true
+            env:
+              - name: FLEET_SCHEDULER_CONFIG
+                value: "/etc/fleet-scheduler/config.yaml"
+              {{- if $.Values.env.endpoints.fleetdb.authenticate }}
+              - name: FLEET_SCHEDULER_FLEETDB_OIDC_CLIENT_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: fleet-scheduler-secrets
+                    key: fleetdb-oidc-client-secret
+              {{- end }}
+              {{- if $.Values.env.endpoints.conditionorc.authenticate }}
+              - name: FLEET_SCHEDULER_CONDITIONORC_OIDC_CLIENT_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: fleet-scheduler-secrets
+                    key: conditionorc-oidc-client-secret
+              {{- end }}
+            resources:
+              limits:
+                cpu: 2000m
+                memory: 1000Mi
+              requests:
+                cpu: 2000m
+                memory: 1000Mi
+          activeDeadlineSeconds: 10800
+---
+{{ end }}
+{{ end }}

@@ -13,7 +13,9 @@ A **job** is a task that is set up to be executed on a schedule through a [k8s c
 ```
 ## Usage within sandbox
 
-Fleet Scheduler jobs can be created within the value.yaml file of the [sandbox](https://github.com/metal-toolbox/sandbox).
+Sandbox will include the [helm chart](https://github.com/metal-toolbox/fleet-scheduler/tree/main/chart) by including it as a dependency in Chart.yaml
+
+Fleet Scheduler jobs can be created within the value.yaml.
 
 Each job requires a few values in order to function.
 
@@ -25,4 +27,6 @@ Each job requires a few values in order to function.
 
 ## Creating new jobs
 
-Explained in the sandbox [README](https://github.com/metal-toolbox/sandbox/blob/main/README.md) in the "Fleet Scheduler" section.
+Jobs can be created within the Sandbox, or within [values.yaml](https://github.com/metal-toolbox/fleet-scheduler/tree/main/chart/values.yaml) here.
+
+Explained in the sandbox [README](https://github.com/metal-toolbox/sandbox/blob/main/notes/fleet-scheduler.md).

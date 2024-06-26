@@ -1,5 +1,0 @@
-*
-.git
-!**.go
-!go.*
-!fleet-scheduler

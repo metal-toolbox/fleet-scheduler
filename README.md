@@ -1,28 +1,20 @@
-# Fleet Scheduler
+## Usage
 
-Fleet-Scheduler is a collection of tasks that can each be set up as jobs in order to automate many things.
+[Helm](https://helm.sh) must be installed to use the charts.  Please refer to
+Helm's [documentation](https://helm.sh/docs) to get started.
 
-A **task** is a set of functions that are executed in order to make changes to fleet services.
+Once Helm has been set up correctly, add the repo as follows:
 
-A **job** is a task that is set up to be executed on a schedule through a [k8s cronjob](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/).
+  helm repo add fleet-scheduler https://metal-toolbox.github.io/fleet-scheduler
 
-## Standalone Usage
+If you had already added this repo earlier, run `helm repo update` to retrieve
+the latest versions of the packages.  You can then run `helm search repo
+<alias>` to see the charts.
 
-```
-./fleet-scheduler <task> --config ./path/to/config.yaml
-```
-## Usage within sandbox
+To install the fleet-scheduler chart:
 
-Fleet Scheduler jobs can be created within the value.yaml file of the [sandbox](https://github.com/metal-toolbox/sandbox).
+    helm install my-fleet-scheduler fleet-scheduler/fleet-scheduler
 
-Each job requires a few values in order to function.
+To uninstall the chart:
 
-## Creating new tasks
-
-- Tasks need to be implemented in code within [Fleet-Scheduler](https://github.com/metal-toolbox/fleet-scheduler)
-- Tasks are implemented as [cobra](https://github.com/spf13/cobra) command line commands within /cmd
-- Take a look at /cmd/inventory.go for a good example.
-
-## Creating new jobs
-
-Explained in the sandbox [README](https://github.com/metal-toolbox/sandbox/blob/main/README.md) in the "Fleet Scheduler" section.
+    helm delete my-fleet-scheduler

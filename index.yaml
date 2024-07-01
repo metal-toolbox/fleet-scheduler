@@ -2,7 +2,7 @@ apiVersion: v1
 entries:
   fleet-scheduler:
   - apiVersion: v2
-    created: "2024-06-27T23:14:14.282200766Z"
+    created: "2024-07-01T16:20:51.535058798Z"
     description: A chart for fleet scheduled cron jobs
     digest: cde09fd9613f3f914680381ea61da184e53fa84f31373722f115861a90fa26b1
     home: https://github.com/metal-toolbox/fleet-scheduler
@@ -12,6 +12,19 @@ entries:
     sources:
     - https://github.com/metal-toolbox/fleet-scheduler
     urls:
-    - https://metal-toolbox.github.io/fleet-scheduler/fleet-scheduler-0.0.3.tgz
+    - https://metal-toolbox.github.io/helm-charts/fleet-scheduler-0.0.3.tgz
     version: 0.0.3
-generated: "2024-06-27T23:14:14.281732111Z"
+  - apiVersion: v2
+    created: "2024-07-01T16:20:51.535380812Z"
+    description: A chart for fleet scheduled cron jobs
+    digest: 6aabc8b5c4d0f4fd78bce456178320659f31e6feafaf55d70cd79c4583527105
+    home: https://github.com/metal-toolbox/helm-charts
+    keywords:
+    - cron
+    name: fleet-scheduler
+    sources:
+    - https://github.com/metal-toolbox/helm-charts
+    urls:
+    - https://metal-toolbox.github.io/helm-charts/fleet-scheduler-v0.0.1.tgz
+    version: v0.0.1
+generated: "2024-07-01T16:20:51.534447691Z"

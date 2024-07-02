@@ -37,7 +37,7 @@ jobs:
         run: |
           sed -i "s/VERSION/${{ github.ref_name }}/g" ./${{ env.CHART_NAME }}/chart/Chart.yaml
           helm package ./${{ env.CHART_NAME }}/chart -u -d ./helm-charts/
-          helm repo index ./helm-charts/ --url https://metal-toolbox.github.io/helm-charts/
+          helm repo index ./helm-charts/ --url https://metal-toolbox.github.io/${{ env.CHART_NAME }}/
       -
         name: Create Git Commit
         run: |

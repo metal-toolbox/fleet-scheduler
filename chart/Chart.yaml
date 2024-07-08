@@ -1,7 +1,7 @@
 apiVersion: v2
 name: fleet-scheduler
 description: A chart for fleet scheduled cron jobs
-version: VERSION # To be updated by github action when tag is created
+version: v1.0.0
 keywords:
   - cron
 home: "https://github.com/metal-toolbox/fleet-scheduler"

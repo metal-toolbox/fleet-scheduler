@@ -35,8 +35,7 @@ jobs:
       -
         name: Package Helm Chart
         run: |
-          sed -i -e '1 s/version: v[0-9]*\.[0-9]*\.[0-9]*/version: ${{ github.ref_name }}/; t' -e '1,// s//version: ${{ github.ref_name }}/' ./${{ env.CHART_NAME }}/chart/Chart.yaml
-          helm package ./${{ env.CHART_NAME }}/chart -u -d ./helm-charts/
+          helm package --version ${{ github.ref_name }} ./${{ env.CHART_NAME }}/chart -u -d ./helm-charts/
           helm repo index ./helm-charts/ --url https://metal-toolbox.github.io/${{ env.CHART_NAME }}/
       -
         name: Create Git Commit

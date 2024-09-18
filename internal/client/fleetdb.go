@@ -2,7 +2,7 @@ package client
 
 import (
 	fleetdbapi "github.com/metal-toolbox/fleetdb/pkg/api/v1"
-	fleetDBRivets "github.com/metal-toolbox/rivets/serverservice"
+	fleetDBRivets "github.com/metal-toolbox/rivets/fleetdb"
 )
 
 func (c *Client) getServerPage(pageSize, page int) ([]fleetdbapi.Server, *fleetdbapi.ServerResponse, error) {

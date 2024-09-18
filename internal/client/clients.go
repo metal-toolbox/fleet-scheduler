@@ -9,7 +9,7 @@ import (
 
 	"github.com/coreos/go-oidc"
 	"github.com/hashicorp/go-retryablehttp"
-	conditionOrcApi "github.com/metal-toolbox/conditionorc/pkg/api/v1/client"
+	conditionOrcApi "github.com/metal-toolbox/conditionorc/pkg/api/v1/conditions/client"
 	"github.com/metal-toolbox/fleet-scheduler/internal/app"
 	fleetdbapi "github.com/metal-toolbox/fleetdb/pkg/api/v1"
 	"github.com/pkg/errors"

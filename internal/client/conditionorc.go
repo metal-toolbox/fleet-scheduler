@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/google/uuid"
-	conditionOrcapi "github.com/metal-toolbox/conditionorc/pkg/api/v1/types"
+	conditionOrcapi "github.com/metal-toolbox/conditionorc/pkg/api/v1/conditions/types"
 	conditionrivets "github.com/metal-toolbox/rivets/condition"
 )
 

@@ -20,7 +20,7 @@ test:
 
 ## golangci-lint
 lint:
-	golangci-lint run --config .golangci.yaml --timeout 300s
+	golangci-lint run --config .golangci.yaml --timeout 300s --fix
 
 ## Go mod
 go-mod:
@@ -29,7 +29,7 @@ go-mod:
 ## build osx bin
 build-osx:
 ifeq (${GO_VERSION}, 0)
-	$(error build requies go version 1.20 or higher)
+	$(error build requies go version 1.22 or higher)
 endif
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o ${PROJECT_NAME} \
 		-ldflags \
@@ -42,7 +42,7 @@ endif
 ## Build linux bin
 build-linux:
 ifeq (${GO_VERSION}, 0)
-	$(error build requies go version 1.20 or higher)
+	$(error build requies go version 1.22 or higher)
 endif
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ${PROJECT_NAME} \
 		-ldflags \

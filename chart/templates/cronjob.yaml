@@ -85,17 +85,15 @@ spec:
                 mountPath: /etc/fleet-scheduler
                 readOnly: true
             env:
-              - name: FLEET_SCHEDULER_CONFIG
-                value: "/etc/fleet-scheduler/config.yaml"
               {{- if $.Values.env.endpoints.fleetdb.authenticate }}
-              - name: FLEET_SCHEDULER_FLEETDB_OIDC_CLIENT_SECRET
+              - name: ENDPOINTS_FLEETDB_OIDC_CLIENT_SECRET
                 valueFrom:
                   secretKeyRef:
                     name: fleet-scheduler-secrets
                     key: fleetdb-oidc-client-secret
               {{- end }}
               {{- if $.Values.env.endpoints.conditionorc.authenticate }}
-              - name: FLEET_SCHEDULER_CONDITIONORC_OIDC_CLIENT_SECRET
+              - name: ENDPOINTS_CONDITIONORC_OIDC_CLIENT_SECRET
                 valueFrom:
                   secretKeyRef:
                     name: fleet-scheduler-secrets

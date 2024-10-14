@@ -19,7 +19,7 @@ const (
 // Values are then grabbed from the ENV variables, anything found will be used to override values in the config file.
 // Example: Setting Configuration.Endpoints.FleetDB.URL
 // In the config file (as yaml); endpoints.fleetdb.url: http://fleetdb:8000
-// As a ENV variable; FLIPFLOP_ENDPOINTS_FLEETDB_URL=http://fleetdb:8000
+// As a ENV variable; ENDPOINTS_FLEETDB_URL=http://fleetdb:8000
 type Configuration struct {
 	// FacilityCode limits this flipflop to events in a facility.
 	FacilityCode string `mapstructure:"facility"`
@@ -34,10 +34,10 @@ type Configuration struct {
 
 type Endpoints struct {
 	// FleetDBConfig defines the fleetdb client configuration parameters
-	ConditionOrc *ConfigOIDC `mapstructure:"conditionorc"`
+	ConditionOrc ConfigOIDC `mapstructure:"conditionorc"`
 
 	// FleetDBConfig defines the fleetdb client configuration parameters
-	FleetDB *ConfigOIDC `mapstructure:"fleetdb"`
+	FleetDB ConfigOIDC `mapstructure:"fleetdb"`
 }
 
 type ConfigOIDC struct {

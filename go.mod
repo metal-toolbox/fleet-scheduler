@@ -2,7 +2,7 @@ module github.com/metal-toolbox/fleet-scheduler
 
 go 1.22.1
 
-toolchain go1.23.1
+toolchain go1.23.2
 
 require (
 	github.com/coreos/go-oidc v2.2.1+incompatible

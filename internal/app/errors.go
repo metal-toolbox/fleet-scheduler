@@ -9,4 +9,5 @@ var (
 	ErrAuth           = errors.New("authentication error")
 	ErrNilConfig      = errors.New("configuration was nil")
 	ErrInvalidConfig  = errors.New("configuration is invalid")
+	ErrConfig         = errors.New("configuration error")
 )

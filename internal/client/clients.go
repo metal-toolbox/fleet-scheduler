@@ -58,7 +58,7 @@ func (c *Client) newFleetDBClient() error {
 	var secret string
 	if c.cfg.Endpoints.FleetDB.Authenticate {
 		secret = c.cfg.Endpoints.FleetDB.OidcClientSecret
-		client, err = c.setUpClientWithOAuth(c.cfg.Endpoints.FleetDB)
+		client, err = c.setUpClientWithOAuth(&c.cfg.Endpoints.FleetDB)
 		if err != nil {
 			return err
 		}
@@ -89,7 +89,7 @@ func (c *Client) newConditionOrcClient() error {
 	var secret string
 	if c.cfg.Endpoints.ConditionOrc.Authenticate {
 		secret = c.cfg.Endpoints.ConditionOrc.OidcClientSecret
-		client, err = c.setUpClientWithOAuth(c.cfg.Endpoints.ConditionOrc)
+		client, err = c.setUpClientWithOAuth(&c.cfg.Endpoints.ConditionOrc)
 		if err != nil {
 			return err
 		}

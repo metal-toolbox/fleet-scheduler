@@ -36,7 +36,7 @@ func init() {
 }
 
 func inventory(ctx context.Context) error {
-	cfg, err := app.LoadConfig(cfgFile)
+	cfg, err := app.LoadConfiguration(cfgFile)
 	if err != nil {
 		return err
 	}

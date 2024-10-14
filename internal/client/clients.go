@@ -56,20 +56,20 @@ func (c *Client) newFleetDBClient() error {
 	var err error
 	var client *http.Client
 	var secret string
-	if c.cfg.FdbCfg.DisableOAuth {
-		secret = "dummy"
-		client = c.setUpClientWithoutOAuth(logHookFunc)
-	} else {
-		secret = c.cfg.FdbCfg.ClientSecret
-		client, err = c.setUpClientWithOAuth(c.cfg.FdbCfg)
+	if c.cfg.Endpoints.FleetDB.Authenticate {
+		secret = c.cfg.Endpoints.FleetDB.OidcClientSecret
+		client, err = c.setUpClientWithOAuth(c.cfg.Endpoints.FleetDB)
 		if err != nil {
 			return err
 		}
+	} else {
+		secret = "dummy"
+		client = c.setUpClientWithoutOAuth(logHookFunc)
 	}
 
 	c.fdbClient, err = fleetdbapi.NewClientWithToken(
 		secret,
-		c.cfg.FdbCfg.Endpoint,
+		c.cfg.Endpoints.FleetDB.URL,
 		client,
 	)
 	if err != nil {
@@ -87,19 +87,19 @@ func (c *Client) newConditionOrcClient() error {
 	var err error
 	var client *http.Client
 	var secret string
-	if c.cfg.CoCfg.DisableOAuth {
-		secret = "dummy"
-		client = c.setUpClientWithoutOAuth(logHookFunc)
-	} else {
-		secret = c.cfg.CoCfg.ClientSecret
-		client, err = c.setUpClientWithOAuth(c.cfg.CoCfg)
+	if c.cfg.Endpoints.ConditionOrc.Authenticate {
+		secret = c.cfg.Endpoints.ConditionOrc.OidcClientSecret
+		client, err = c.setUpClientWithOAuth(c.cfg.Endpoints.ConditionOrc)
 		if err != nil {
 			return err
 		}
+	} else {
+		secret = "dummy"
+		client = c.setUpClientWithoutOAuth(logHookFunc)
 	}
 
 	c.coClient, err = conditionOrcApi.NewClient(
-		c.cfg.CoCfg.Endpoint,
+		c.cfg.Endpoints.ConditionOrc.URL,
 		conditionOrcApi.WithAuthToken(secret),
 		conditionOrcApi.WithHTTPClient(client),
 	)
@@ -133,18 +133,18 @@ func (c *Client) setUpClientWithoutOAuth(logHookFunc func(l retryablehttp.Logger
 }
 
 func (c *Client) setUpClientWithOAuth(cfg *app.ConfigOIDC) (*http.Client, error) {
-	provider, err := oidc.NewProvider(c.ctx, cfg.IssuerEndpoint)
+	provider, err := oidc.NewProvider(c.ctx, cfg.OidcIssuerURL)
 	if err != nil {
 		return nil, err
 	}
 
 	// setup oauth
 	oauthConfig := clientcredentials.Config{
-		ClientID:       cfg.ClientID,
-		ClientSecret:   cfg.ClientSecret,
+		ClientID:       cfg.OidcClientID,
+		ClientSecret:   cfg.OidcClientSecret,
 		TokenURL:       provider.Endpoint().TokenURL,
-		Scopes:         cfg.ClientScopes,
-		EndpointParams: url.Values{"audience": []string{cfg.AudienceEndpoint}},
+		Scopes:         cfg.OidcClientScopes,
+		EndpointParams: url.Values{"audience": []string{cfg.OidcAudienceURL}},
 	}
 	oAuthclient := oauthConfig.Client(c.ctx)
 

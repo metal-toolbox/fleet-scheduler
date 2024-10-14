@@ -7,20 +7,5 @@ metadata:
   namespace: {{ .Values.env.namespace }}
 data:
   config.yaml: |
-    log_level: {{ .Values.env.log_level }}
-    facility_code: {{ tpl .Values.env.facility . }}
-    fleetdb_api:
-      disable_oauth: {{ not .Values.env.endpoints.fleetdb.authenticate }}
-      endpoint: {{ .Values.env.endpoints.fleetdb.url }}
-      oidc_client_id: {{ .Values.env.endpoints.fleetdb.oidc_client_id }}
-      oidc_audience_endpoint: {{ .Values.env.endpoints.fleetdb.oidc_audience_url}}
-      oidc_issuer_endpoint: {{ .Values.env.endpoints.fleetdb.oidc_issuer_url}}
-      oidc_scopes: {{ .Values.env.endpoints.fleetdb.oidc_scopes }}
-    conditionorc_api:
-      disable_oauth: {{ not .Values.env.endpoints.conditionorc.authenticate }}
-      endpoint: {{ .Values.env.endpoints.conditionorc.url }}
-      oidc_client_id: {{ .Values.env.endpoints.conditionorc.oidc_client_id }}
-      oidc_audience_endpoint: {{ .Values.env.endpoints.conditionorc.oidc_audience_url}}
-      oidc_issuer_endpoint: {{ .Values.env.endpoints.conditionorc.oidc_issuer_url}}
-      oidc_scopes: {{ .Values.env.endpoints.conditionorc.oidc_scopes }}
+{{ toYaml .Values.env | indent 4 }}
 {{ end }}

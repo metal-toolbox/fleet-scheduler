@@ -4,10 +4,12 @@ image:
     tag: latest
     url: localhost:5001
 env:
-  namespace: default
   facility: sandbox
   log_level: debug
   endpoints:
+    otel:
+      url: jaeger:4317
+      authenticate: false
     fleetdb:
       authenticate: true
       url: http://fleetdb:8000

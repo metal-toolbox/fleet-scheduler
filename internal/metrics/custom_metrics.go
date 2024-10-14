@@ -12,31 +12,27 @@ var (
 func init() {
 	ConditionorcErrorCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: "fleet-scheduler",
+			Namespace: "fleet_scheduler",
 			Subsystem: "conditionorc",
-			Name:      "fleet_scheduler_conditionorc_errors",
+			Name:      "client_errors",
 			Help:      "a count of all errors attempting to reach conditionorc",
-		}, []string{
-			"errors",
-		},
+		}, []string{},
 	)
 
 	FleetdbErrorCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: "fleet-scheduler",
+			Namespace: "fleet_scheduler",
 			Subsystem: "fleetdb",
-			Name:      "fleet_scheduler_fleetdb_errors",
+			Name:      "client_errors",
 			Help:      "a count of all errors attempting to reach fleetdb",
-		}, []string{
-			"errors",
-		},
+		}, []string{},
 	)
 
 	InventoryCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: "fleet-scheduler",
+			Namespace: "fleet_scheduler",
 			Subsystem: "core",
-			Name:      "fleet_scheduler_inventory_count",
+			Name:      "inventory_count",
 			Help:      "a count of all errors attempting to reach fleet-scheduler dependencies",
 		}, []string{},
 	)

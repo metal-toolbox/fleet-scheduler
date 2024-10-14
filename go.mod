@@ -1,8 +1,6 @@
 module github.com/metal-toolbox/fleet-scheduler
 
-go 1.22.1
-
-toolchain go1.23.1
+go 1.23
 
 require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
@@ -10,7 +8,6 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/jeremywohl/flatten v1.0.1
-	github.com/metal-toolbox/bioscfg v0.1.0
 	github.com/metal-toolbox/conditionorc v1.1.8
 	github.com/metal-toolbox/fleetdb v1.19.5
 	github.com/metal-toolbox/rivets v1.3.10
@@ -26,6 +23,7 @@ require (
 )
 
 require (
+	cloud.google.com/go/kms v1.17.1 // indirect
 	github.com/banzaicloud/logrus-runtime-formatter v0.0.0-20190729070250-5ae5475bae5e // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bmc-toolbox/common v0.0.0-20240806132831-ba8adc6a35e3 // indirect

@@ -39,7 +39,7 @@ jobs:
 
       - name: Build Fleet Scheduler Docker image - no push
         id: dockerbuild-fleet-scheduler
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
            context: .
            push: false

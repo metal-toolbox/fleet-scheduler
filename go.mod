@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/metal-toolbox/conditionorc v1.1.8
-	github.com/metal-toolbox/fleetdb v1.19.5
+	github.com/metal-toolbox/fleetdb v1.19.7
 	github.com/metal-toolbox/rivets v1.3.10
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
@@ -26,7 +26,7 @@ require (
 	cloud.google.com/go/kms v1.17.1 // indirect
 	github.com/banzaicloud/logrus-runtime-formatter v0.0.0-20190729070250-5ae5475bae5e // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/bmc-toolbox/common v0.0.0-20240806132831-ba8adc6a35e3 // indirect
+	github.com/bmc-toolbox/common v0.0.0-20240926143744-8c478be881d7 // indirect
 	github.com/bytedance/sonic v1.12.1 // indirect
 	github.com/bytedance/sonic/loader v0.2.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect

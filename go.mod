@@ -8,7 +8,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/jeremywohl/flatten v1.0.1
-	github.com/metal-toolbox/conditionorc v1.1.8
+	github.com/metal-toolbox/conditionorc v1.11.2
 	github.com/metal-toolbox/fleetdb v1.19.5
 	github.com/metal-toolbox/rivets v1.3.10
 	github.com/mitchellh/mapstructure v1.5.0

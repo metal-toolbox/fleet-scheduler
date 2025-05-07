@@ -1,6 +1,8 @@
 module github.com/metal-toolbox/fleet-scheduler
 
-go 1.23
+go 1.23.0
+
+toolchain go1.24.3
 
 require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
@@ -19,7 +21,7 @@ require (
 	github.com/spf13/viper v1.19.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.53.0
 	golang.org/x/net v0.28.0
-	golang.org/x/oauth2 v0.22.0
+	golang.org/x/oauth2 v0.30.0
 )
 
 require (

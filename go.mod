@@ -10,7 +10,7 @@ require (
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/metal-toolbox/conditionorc v1.1.8
 	github.com/metal-toolbox/fleetdb v1.20.3
-	github.com/metal-toolbox/rivets v1.3.7
+	github.com/metal-toolbox/rivets v1.3.10
 	github.com/metal-toolbox/rivets/v2 v2.1.2
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1

@@ -6,7 +6,7 @@ require (
 	github.com/coreos/go-oidc v2.3.0+incompatible
 	github.com/equinix-labs/otel-init-go v0.0.9
 	github.com/google/uuid v1.6.0
-	github.com/hashicorp/go-retryablehttp v0.7.7
+	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/metal-toolbox/conditionorc v1.1.8
 	github.com/metal-toolbox/fleetdb v1.20.3

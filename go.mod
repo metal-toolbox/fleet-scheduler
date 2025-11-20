@@ -1,6 +1,6 @@
 module github.com/metal-toolbox/fleet-scheduler
 
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/coreos/go-oidc v2.3.0+incompatible
@@ -11,7 +11,6 @@ require (
 	github.com/metal-toolbox/conditionorc v1.1.8
 	github.com/metal-toolbox/fleetdb v1.20.3
 	github.com/metal-toolbox/rivets v1.3.7
-	github.com/metal-toolbox/rivets/v2 v2.1.2
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.20.5
@@ -19,12 +18,11 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.19.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0
-	golang.org/x/net v0.38.0
+	golang.org/x/net v0.47.0
 	golang.org/x/oauth2 v0.27.0
 )
 
 require (
-	cloud.google.com/go/kms v1.18.5 // indirect
 	github.com/banzaicloud/logrus-runtime-formatter v0.0.0-20190729070250-5ae5475bae5e // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bmc-toolbox/common v0.0.0-20240806132831-ba8adc6a35e3 // indirect
@@ -79,6 +77,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/metal-toolbox/bmc-common v1.0.3 // indirect
+	github.com/metal-toolbox/rivets/v2 v2.1.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
@@ -123,10 +122,10 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	gocloud.dev v0.40.0 // indirect
 	golang.org/x/arch v0.12.0 // indirect
-	golang.org/x/crypto v0.36.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
-	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/api v0.204.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241104194629-dd2ea8efbc28 // indirect

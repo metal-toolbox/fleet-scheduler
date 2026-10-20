@@ -1,6 +1,6 @@
 module github.com/metal-toolbox/fleet-scheduler
 
-go 1.23.0
+go 1.24
 
 require (
 	github.com/coreos/go-oidc v2.3.0+incompatible
@@ -11,7 +11,6 @@ require (
 	github.com/metal-toolbox/conditionorc v1.1.8
 	github.com/metal-toolbox/fleetdb v1.20.3
 	github.com/metal-toolbox/rivets v1.3.7
-	github.com/metal-toolbox/rivets/v2 v2.1.2
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.20.5
@@ -24,7 +23,6 @@ require (
 )
 
 require (
-	cloud.google.com/go/kms v1.18.5 // indirect
 	github.com/banzaicloud/logrus-runtime-formatter v0.0.0-20190729070250-5ae5475bae5e // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bmc-toolbox/common v0.0.0-20240806132831-ba8adc6a35e3 // indirect
@@ -72,13 +70,14 @@ require (
 	github.com/jackc/pgx/v4 v4.18.3 // indirect
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.17.11 // indirect
+	github.com/klauspost/compress v1.18.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/metal-toolbox/bmc-common v1.0.3 // indirect
+	github.com/metal-toolbox/rivets/v2 v2.1.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
